@@ -1,0 +1,25 @@
+# FastAPI and server essentials
+fastapi
+uvicorn[standard]
+
+# Database and ORM
+sqlalchemy
+psycopg2-binary
+alembic
+
+# Environment and settings
+python-dotenv
+pydantic-settings
+pydantic[email]
+
+# Authentication & security
+passlib==1.7.4
+bcrypt==4.0.1
+python-jose[cryptography]
+
+# File uploads
+python-multipart
+ 
+# Data analysis & ML
+pandas
+scikit-learn
