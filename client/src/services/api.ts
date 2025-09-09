@@ -1,6 +1,7 @@
 import axios from "axios";
+// UPDATE: Importing all necessary types for clarity
 import type {
-  AnalyticsSummary, // <-- FIX: Changed from DashboardSummary
+  AnalyticsSummary,
   Order,
   Product,
   User,
@@ -24,7 +25,7 @@ const apiClient = axios.create({
 
 // -- Data Fetching Functions --
 export const getDashboardSummary = () =>
-  apiClient.get<AnalyticsSummary>("/analytics/summary"); // <-- FIX: Changed from DashboardSummary
+  apiClient.get<AnalyticsSummary>("/analytics/summary");
 
 export const getProducts = () =>
   apiClient.get<Product[]>("/inventory/products");

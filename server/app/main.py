@@ -5,6 +5,8 @@ from .models import models
 from .api import analytics, inventory, orders, logistics, users
 
 # App shuru hone par saare database tables create karein
+
+
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Supply Chain AI Dashboard API")

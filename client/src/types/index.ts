@@ -1,11 +1,98 @@
-// Status types for badges
-export type OrderStatus = "Delivered" | "Shipped" | "Pending" | "Cancelled";
+// --- Type Aliases (Matching Final Blueprint) ---
+
+export type OrderStatus =
+  | "Pending"
+  | "Processing"
+  | "Shipped"
+  | "In_Transit"
+  | "Delivered"
+  | "Cancelled"
+  | "Returned";
+export type PaymentStatus = "Paid" | "Unpaid" | "Pending" | "COD" | "Refunded";
+export type PaymentMethod =
+  | "Credit Card"
+  | "Debit Card"
+  | "UPI"
+  | "Net Banking"
+  | "Wallet"
+  | "COD";
+export type ShippingProvider =
+  | "Self-Delivery"
+  | "BlueDart"
+  | "Delhivery"
+  | "DTDC";
 export type ProductStatus = "In Stock" | "Low Stock" | "Out of Stock";
 export type VehicleStatus = "On Route" | "Idle" | "In-Shop";
 export type UserRole = "admin" | "user";
 
 // --- Interface Definitions ---
 
+// Represents product details within a fetched order
+export interface ItemProductDetail {
+  name: string;
+  sku: string;
+}
+
+// Represents an Item with its quantity inside an Order
+export interface ItemInOrder {
+  quantity: number;
+  product: ItemProductDetail;
+}
+
+// Represents an item when creating a new Order
+export interface OrderItemCreate {
+  product_id: number;
+  quantity: number;
+}
+
+// The main Order object received from the API
+export interface Order {
+  id: number;
+  order_date: string;
+  // Customer
+  customer_name: string;
+  customer_email: string;
+  shipping_address: string;
+  // Payment
+  amount: number;
+  payment_status: PaymentStatus;
+  payment_method: PaymentMethod;
+  // Fulfillment
+  status: OrderStatus;
+  shipping_provider?: ShippingProvider;
+  tracking_id?: string;
+  // Logistics
+  vehicle_id?: number;
+  // Items in the order
+  items: ItemInOrder[];
+}
+
+// Payload for creating a new Order
+export interface OrderCreate {
+  customer_name: string;
+  customer_email: string;
+  shipping_address: string;
+  amount: number;
+  payment_status: PaymentStatus;
+  payment_method: PaymentMethod;
+  status: OrderStatus;
+  shipping_provider?: ShippingProvider;
+  tracking_id?: string;
+  vehicle_id?: number;
+  // An order must be created with items
+  items: OrderItemCreate[];
+}
+
+// Payload for updating an Order's fulfillment details
+export interface OrderUpdate {
+  status?: OrderStatus;
+  payment_status?: PaymentStatus;
+  shipping_provider?: ShippingProvider;
+  tracking_id?: string;
+  vehicle_id?: number;
+}
+
+// Other interfaces (User, Product, etc. remain largely the same)
 export interface User {
   id: number;
   name: string;
@@ -47,29 +134,10 @@ export interface ProductCreate {
 
 export interface ProductUpdate {
   name?: string;
-  sku?: string;
   stock_quantity?: number;
   status?: ProductStatus;
   image_url?: string;
 }
-
-export interface Order {
-  id: number;
-  customer_name: string;
-  order_date: string;
-  status: OrderStatus;
-  amount: number;
-  shipping_address: string;
-}
-
-export interface OrderCreate {
-  customer_name: string;
-  amount: number;
-  shipping_address: string;
-  status: OrderStatus;
-}
-
-export type OrderUpdate = Partial<OrderCreate>;
 
 export interface Vehicle {
   id: number;
@@ -83,27 +151,20 @@ export interface Vehicle {
   longitude: number;
 }
 
-// UPDATE: Humne DashboardSummary ko hata kar AnalyticsSummary ke andar daal diya hai
-// taaki saara data ek hi jagah se aaye.
-
-// UPDATE: Yeh naye types Analytics page ke charts ke liye hain.
+// Analytics interfaces (no change)
 export interface KpiCard {
   title: string;
   value: string;
   change: string;
 }
-
 export interface TopProduct {
   name: string;
   value: number;
 }
-
 export interface DeliveryStatusChart {
   on_time: number;
   delayed: number;
 }
-
-// UPDATE: Yeh naya, detailed type Analytics aur Dashboard, dono pages use karenge.
 export interface AnalyticsSummary {
   kpi_cards: KpiCard[];
   top_selling_products: TopProduct[];
