@@ -1,5 +1,4 @@
 import axios from "axios";
-// UPDATE: Importing all necessary types for clarity
 import type {
   AnalyticsSummary,
   Order,
@@ -65,3 +64,10 @@ export const updateOrder = (orderId: number, orderData: OrderUpdate) =>
 
 export const deleteOrder = (orderId: number) =>
   apiClient.delete(`/orders/${orderId}`);
+
+// --- NEW AI HELPER FUNCTION ---
+export const generateDescription = (productName: string, category?: string) =>
+  apiClient.post<{ description: string }>("/ai/generate-description", {
+    product_name: productName,
+    category: category,
+  });

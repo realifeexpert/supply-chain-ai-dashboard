@@ -45,37 +45,57 @@ class StockStatus(str, Enum):
     Out_of_Stock = "Out of Stock"
 
 
-# --- Product Related Schemas ---
+# --- Product Related Schemas (Updated) ---
 
 class ProductBase(BaseModel):
+    # --- Purane Fields ---
     name: str
     sku: str
     stock_quantity: int
     status: StockStatus
     image_url: Optional[str] = None
 
+    # --- NAYE FIELDS AAPKE TABLE KE ANUSAAR ADD KIYE GAYE HAIN ---
+    description: Optional[str] = None
+    category: Optional[str] = None
+    supplier: Optional[str] = None
+    reorder_level: Optional[int] = None
+    cost_price: Optional[float] = None
+    selling_price: Optional[float] = None
+    last_restocked: Optional[datetime] = None
+
 class ProductCreate(ProductBase):
     pass
 
 class ProductUpdate(BaseModel):
+    # --- Purane Fields ---
     name: Optional[str] = None
     stock_quantity: Optional[int] = None
     status: Optional[StockStatus] = None
     image_url: Optional[str] = None
+
+    # --- NAYE FIELDS AAPKE TABLE KE ANUSAAR ADD KIYE GAYE HAIN ---
+    description: Optional[str] = None
+    category: Optional[str] = None
+    supplier: Optional[str] = None
+    reorder_level: Optional[int] = None
+    cost_price: Optional[float] = None
+    selling_price: Optional[float] = None
+    last_restocked: Optional[datetime] = None
 
 class Product(ProductBase):
     id: int
     class Config:
         from_attributes = True
 
-# NEW: Schema for showing product details within an order response
+# Schema for showing product details within an order response
 class ItemProductDetail(BaseModel):
     name: str
     sku: str
     class Config:
         from_attributes = True
 
-# NEW: Schema for showing an item inside an order response, with quantity
+# Schema for showing an item inside an order response, with quantity
 class ItemInOrder(BaseModel):
     quantity: int
     product: ItemProductDetail
@@ -83,7 +103,7 @@ class ItemInOrder(BaseModel):
         from_attributes = True
 
 
-# --- User & Vehicle Schemas (No major changes) ---
+# --- User & Vehicle Schemas (No changes) ---
 class UserBase(BaseModel):
     name: str
     email: str
@@ -119,9 +139,9 @@ class Vehicle(VehicleBase):
     class Config:
         from_attributes = True
 
-# --- Order Related Schemas (Fully Updated to Blueprint) ---
+# --- Order Related Schemas (No changes) ---
 
-# NEW: Schema for defining an item when creating an order
+# Schema for defining an item when creating an order
 class OrderItemCreate(BaseModel):
     product_id: int
     quantity: int
@@ -198,4 +218,3 @@ class ForecastDataPoint(BaseModel):
 
 class DemandForecast(BaseModel):
     forecast: List[ForecastDataPoint]
-

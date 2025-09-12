@@ -92,7 +92,7 @@ export interface OrderUpdate {
   vehicle_id?: number;
 }
 
-// Other interfaces (User, Product, etc. remain largely the same)
+// --- USER INTERFACES ---
 export interface User {
   id: number;
   name: string;
@@ -115,6 +115,8 @@ export interface UserUpdate {
   is_active?: boolean;
 }
 
+// --- PRODUCT INTERFACES (UPDATED) ---
+
 export interface Product {
   id: number;
   name: string;
@@ -122,6 +124,14 @@ export interface Product {
   stock_quantity: number;
   status: ProductStatus;
   image_url?: string;
+  // --- NAYE FIELDS ---
+  description?: string;
+  category?: string;
+  supplier?: string;
+  reorder_level?: number;
+  cost_price?: number;
+  selling_price?: number;
+  last_restocked?: string; // JSON mein date string ban jaati hai
 }
 
 export interface ProductCreate {
@@ -130,15 +140,33 @@ export interface ProductCreate {
   stock_quantity: number;
   status: ProductStatus;
   image_url?: string;
+  // --- NAYE FIELDS ---
+  description?: string;
+  category?: string;
+  supplier?: string;
+  reorder_level?: number;
+  cost_price?: number;
+  selling_price?: number;
+  last_restocked?: string;
 }
 
 export interface ProductUpdate {
   name?: string;
+  sku?: string; // <-- YEH LINE MISSING THI
   stock_quantity?: number;
   status?: ProductStatus;
   image_url?: string;
+  // --- NAYE FIELDS ---
+  description?: string;
+  category?: string;
+  supplier?: string;
+  reorder_level?: number;
+  cost_price?: number;
+  selling_price?: number;
+  last_restocked?: string;
 }
 
+// --- VEHICLE INTERFACE ---
 export interface Vehicle {
   id: number;
   vehicle_number: string;
@@ -151,7 +179,7 @@ export interface Vehicle {
   longitude: number;
 }
 
-// Analytics interfaces (no change)
+// --- ANALYTICS INTERFACES ---
 export interface KpiCard {
   title: string;
   value: string;
