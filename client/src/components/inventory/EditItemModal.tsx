@@ -267,6 +267,22 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({
                   className="w-full bg-zinc-800 rounded px-3 py-2"
                 />
               </div>
+              {/* --- UPDATED: Added Selling Price Input Field --- */}
+              <div>
+                <label className="block text-xs font-medium text-zinc-400 mb-1">
+                  Selling Price (₹)
+                </label>
+                <input
+                  type="number"
+                  name="selling_price"
+                  value={formData.selling_price || 0}
+                  onChange={handleChange}
+                  min="0"
+                  step="0.01"
+                  className="w-full bg-zinc-800 rounded px-3 py-2"
+                />
+              </div>
+              {/* --- END OF UPDATE --- */}
               {/* --- CHANGE 5: The status dropdown will now be disabled --- */}
               <div>
                 <label className="block text-xs font-medium text-zinc-400 mb-1">

@@ -263,6 +263,24 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({
                   className="w-full bg-zinc-800 rounded px-3 py-2"
                 />
               </div>
+
+              {/* UPDATED: Added the Selling Price input field */}
+              <div>
+                <label className="block text-xs font-medium text-zinc-400 mb-1">
+                  Selling Price (₹)
+                </label>
+                <input
+                  type="number"
+                  name="selling_price"
+                  value={formData.selling_price}
+                  onChange={handleChange}
+                  min="0"
+                  step="0.01"
+                  className="w-full bg-zinc-800 rounded px-3 py-2"
+                />
+              </div>
+              {/* --- END OF UPDATE --- */}
+
               <div>
                 <label className="block text-xs font-medium text-zinc-400 mb-1">
                   Status (Auto)
