@@ -1,5 +1,7 @@
 import React from "react";
 import { AlertTriangle } from "lucide-react";
+// --- CHANGE 1: Import the reusable ModalLayout component ---
+import { ModalLayout } from "@/layouts/ModalLayout";
 
 interface ConfirmationModalProps {
   isOpen: boolean;
@@ -18,22 +20,33 @@ export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
   message,
   loading,
 }) => {
+  // This check is now also handled by ModalLayout, but keeping it is safe.
   if (!isOpen) return null;
 
+  // --- CHANGE 2: The entire return statement is now wrapped in ModalLayout ---
+  // The old manual layout (backdrop, panel, title) has been removed.
   return (
-    <div className="fixed inset-0 bg-black/60 z-50 flex justify-center items-center p-4">
-      <div className="bg-zinc-900 rounded-lg shadow-xl p-6 w-full max-w-sm relative border border-zinc-700 text-center">
+    <ModalLayout
+      isOpen={isOpen}
+      onClose={onClose}
+      title={title} // The title is passed as a prop
+      size="max-w-sm"
+    >
+      {/* The unique content of the confirmation modal remains inside */}
+      <div className="text-center">
         <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-red-500/10 mb-4">
           <AlertTriangle className="h-6 w-6 text-red-500" aria-hidden="true" />
         </div>
-        <h2 className="text-xl font-bold text-white mb-2">{title}</h2>
-        <p className="text-zinc-400 mb-6">{message}</p>
+
+        {/* The main title is now handled by ModalLayout, so the h2 has been removed. We only need the message. */}
+        <p className="text-zinc-400 mb-8">{message}</p>
+
         <div className="flex justify-center gap-4">
           <button
             type="button"
             onClick={onClose}
             disabled={loading}
-            className="w-full bg-zinc-700 hover:bg-zinc-600 text-white font-semibold py-2 px-4 rounded-lg"
+            className="w-full bg-zinc-700 hover:bg-zinc-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
           >
             Cancel
           </button>
@@ -41,12 +54,12 @@ export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
             type="button"
             onClick={onConfirm}
             disabled={loading}
-            className="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-lg disabled:opacity-50"
+            className="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-lg disabled:opacity-50 transition-colors"
           >
             {loading ? "Deleting..." : "Delete"}
           </button>
         </div>
       </div>
-    </div>
+    </ModalLayout>
   );
 };

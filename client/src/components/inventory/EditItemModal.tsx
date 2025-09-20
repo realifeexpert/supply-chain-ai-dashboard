@@ -1,5 +1,5 @@
 import React, { useState, useEffect, type FormEvent } from "react";
-import { X, Sparkles, Plus, Minus } from "lucide-react"; // Imported Plus and Minus icons
+import { Sparkles, Plus, Minus } from "lucide-react";
 // --- Types and API functions ---
 import type { Product, ProductUpdate, MediaItem, ProductStatus } from "@/types";
 import {
@@ -8,6 +8,8 @@ import {
   getSettings,
 } from "@/services/api";
 import { ImageUploader } from "@/components/common/ImageUploader";
+// --- CHANGE 1: Import the reusable ModalLayout component ---
+import { ModalLayout } from "@/layouts/ModalLayout";
 
 interface EditItemModalProps {
   isOpen: boolean;
@@ -16,10 +18,8 @@ interface EditItemModalProps {
   product: Product | null;
 }
 
-// Define a type for the fields that can be numbers or empty strings for a better UX
 type NumericValue = number | "";
 
-// Define a more specific type for the form data state to handle NumericValue
 type EditFormData = Omit<
   ProductUpdate,
   "stock_quantity" | "reorder_level" | "cost_price" | "selling_price"
@@ -36,7 +36,6 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({
   onProductUpdated,
   product,
 }) => {
-  // --- LOGIC CHANGE 1: Update state to allow empty strings for number fields ---
   const [formData, setFormData] = useState<EditFormData>({});
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -77,7 +76,6 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({
     }
   }, [product, isOpen]);
 
-  // --- LOGIC CHANGE 2: Updated handleChange to handle empty strings for a better typing experience ---
   const handleChange = (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
@@ -96,14 +94,12 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({
       if (isNaN(numericValue as number)) {
         return;
       }
-
       const newFormData = { ...formData, [name]: numericValue };
 
       if (name === "stock_quantity") {
         const stock = Number(numericValue) || 0;
         const lowStockThreshold =
           parseInt(settings["LOW_STOCK_THRESHOLD"], 10) || 10;
-
         let newStatus: ProductStatus = "In Stock";
         if (stock <= 0) {
           newStatus = "Out of Stock";
@@ -118,19 +114,15 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({
     }
   };
 
-  // --- LOGIC CHANGE 3: Added a handler for the new stepper (+/-) buttons ---
   const handleStepChange = (fieldName: keyof EditFormData, amount: number) => {
     const currentValue = Number(formData[fieldName]) || 0;
     let newValue = currentValue + amount;
-
     if (newValue < 0) {
       newValue = 0;
     }
-
     const syntheticEvent = {
       target: { name: fieldName, value: String(newValue) },
     } as React.ChangeEvent<HTMLInputElement>;
-
     handleChange(syntheticEvent);
   };
 
@@ -168,8 +160,6 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({
     if (!product) return;
     setLoading(true);
     setError(null);
-
-    // --- LOGIC CHANGE 4: Sanitize data before sending to the backend ---
     const payload = {
       ...formData,
       stock_quantity: Number(formData.stock_quantity) || 0,
@@ -177,7 +167,6 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({
       cost_price: Number(formData.cost_price) || 0,
       selling_price: Number(formData.selling_price) || 0,
     };
-
     try {
       const response = await updateProduct(product.id, payload);
       onProductUpdated(response.data);
@@ -194,292 +183,276 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({
   const inputStyles =
     "w-full bg-zinc-800 border border-zinc-700 rounded-lg pl-3 pr-10 py-2 text-sm text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-shadow";
 
+  // --- CHANGE 2: The entire return statement is now wrapped in ModalLayout ---
+  // The old manual layout (backdrop, panel, title, close button) has been removed.
   return (
-    // --- UI FIX FOR SCROLLING ---
-    <div className="fixed inset-0 bg-black/60 z-50 flex justify-center items-start overflow-y-auto p-4 pt-8 md:pt-12">
-      <div className="bg-zinc-900 rounded-lg shadow-xl p-8 w-full max-w-2xl relative border border-zinc-700 mb-8">
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 text-zinc-500 hover:text-white"
-        >
-          <X size={20} />
-        </button>
-        <h2 className="text-2xl font-bold text-white mb-6">
-          Edit Item: {product.name}
-        </h2>
-
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
-            {/* Column 1 */}
-            <div className="space-y-5">
-              <div>
-                <label className="block text-xs font-medium text-zinc-400 mb-1.5">
-                  {" "}
-                  Product Name *{" "}
-                </label>
-                <input
-                  type="text"
-                  name="name"
-                  value={formData.name || ""}
-                  onChange={handleChange}
-                  required
-                  className={`${inputStyles} !pr-3`}
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-zinc-400 mb-1.5">
-                  {" "}
-                  SKU *{" "}
-                </label>
-                <input
-                  type="text"
-                  name="sku"
-                  value={formData.sku || ""}
-                  onChange={handleChange}
-                  required
-                  className={`${inputStyles} !pr-3`}
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-zinc-400 mb-1.5">
-                  {" "}
-                  Category{" "}
-                </label>
-                <input
-                  type="text"
-                  name="category"
-                  value={formData.category || ""}
-                  onChange={handleChange}
-                  className={`${inputStyles} !pr-3`}
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-zinc-400 mb-1.5">
-                  {" "}
-                  Supplier{" "}
-                </label>
-                <input
-                  type="text"
-                  name="supplier"
-                  value={formData.supplier || ""}
-                  onChange={handleChange}
-                  className={`${inputStyles} !pr-3`}
-                />
-              </div>
-            </div>
-
-            {/* Column 2 */}
-            <div className="space-y-5">
-              {/* --- UI/UX CHANGE: Replaced all number inputs with the new stepper component structure --- */}
-              <div>
-                <label className="block text-xs font-medium text-zinc-400 mb-1.5">
-                  {" "}
-                  Stock Quantity *{" "}
-                </label>
-                <div className="relative">
-                  <input
-                    type="number"
-                    name="stock_quantity"
-                    value={formData.stock_quantity ?? ""}
-                    onChange={handleChange}
-                    required
-                    min="0"
-                    className={`${inputStyles} [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none`}
-                  />
-                  <div className="absolute inset-y-0 right-0 flex items-center">
-                    <button
-                      type="button"
-                      onClick={() => handleStepChange("stock_quantity", -1)}
-                      disabled={Number(formData.stock_quantity) <= 0}
-                      className="px-2 text-zinc-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed"
-                    >
-                      <Minus size={16} />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleStepChange("stock_quantity", 1)}
-                      className="px-2 text-zinc-400 hover:text-white"
-                    >
-                      <Plus size={16} />
-                    </button>
-                  </div>
-                </div>
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-zinc-400 mb-1.5">
-                  {" "}
-                  Reorder Level{" "}
-                </label>
-                <div className="relative">
-                  <input
-                    type="number"
-                    name="reorder_level"
-                    value={formData.reorder_level ?? ""}
-                    onChange={handleChange}
-                    min="0"
-                    className={`${inputStyles} [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none`}
-                  />
-                  <div className="absolute inset-y-0 right-0 flex items-center">
-                    <button
-                      type="button"
-                      onClick={() => handleStepChange("reorder_level", -1)}
-                      disabled={Number(formData.reorder_level) <= 0}
-                      className="px-2 text-zinc-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed"
-                    >
-                      <Minus size={16} />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleStepChange("reorder_level", 1)}
-                      className="px-2 text-zinc-400 hover:text-white"
-                    >
-                      <Plus size={16} />
-                    </button>
-                  </div>
-                </div>
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-zinc-400 mb-1.5">
-                  {" "}
-                  Cost Price (₹){" "}
-                </label>
-                <div className="relative">
-                  <input
-                    type="number"
-                    name="cost_price"
-                    value={formData.cost_price ?? ""}
-                    onChange={handleChange}
-                    min="0"
-                    step="0.01"
-                    className={`${inputStyles} [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none`}
-                  />
-                  <div className="absolute inset-y-0 right-0 flex items-center">
-                    <button
-                      type="button"
-                      onClick={() => handleStepChange("cost_price", -1)}
-                      disabled={Number(formData.cost_price) <= 0}
-                      className="px-2 text-zinc-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed"
-                    >
-                      <Minus size={16} />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleStepChange("cost_price", 1)}
-                      className="px-2 text-zinc-400 hover:text-white"
-                    >
-                      <Plus size={16} />
-                    </button>
-                  </div>
-                </div>
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-zinc-400 mb-1.5">
-                  {" "}
-                  Selling Price (₹){" "}
-                </label>
-                <div className="relative">
-                  <input
-                    type="number"
-                    name="selling_price"
-                    value={formData.selling_price ?? ""}
-                    onChange={handleChange}
-                    min="0"
-                    step="0.01"
-                    className={`${inputStyles} [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none`}
-                  />
-                  <div className="absolute inset-y-0 right-0 flex items-center">
-                    <button
-                      type="button"
-                      onClick={() => handleStepChange("selling_price", -1)}
-                      disabled={Number(formData.selling_price) <= 0}
-                      className="px-2 text-zinc-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed"
-                    >
-                      <Minus size={16} />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleStepChange("selling_price", 1)}
-                      className="px-2 text-zinc-400 hover:text-white"
-                    >
-                      <Plus size={16} />
-                    </button>
-                  </div>
-                </div>
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-zinc-400 mb-1.5">
-                  {" "}
-                  Status (Auto){" "}
-                </label>
-                <select
-                  name="status"
-                  value={formData.status || ""}
-                  disabled
-                  className={`${inputStyles} !pr-3 disabled:opacity-70 disabled:cursor-not-allowed`}
-                >
-                  <option>In Stock</option>
-                  <option>Low Stock</option>
-                  <option>Out of Stock</option>
-                </select>
-              </div>
-            </div>
-          </div>
-
-          <div className="pt-2 space-y-6">
+    <ModalLayout
+      isOpen={isOpen}
+      onClose={onClose}
+      title={`Edit Item: ${product.name}`}
+      size="max-w-2xl"
+    >
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
+          {/* Column 1 */}
+          <div className="space-y-5">
             <div>
-              <div className="flex justify-between items-center mb-1.5">
-                <label className="block text-xs font-medium text-zinc-400">
-                  AI Generated Description
-                </label>
-                <button
-                  type="button"
-                  onClick={handleGenerateDescription}
-                  disabled={isGenerating || !formData.name}
-                  className="flex items-center gap-1.5 text-xs bg-purple-600/20 text-purple-300 px-2.5 py-1.5 rounded-md hover:bg-purple-600/40 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                >
-                  <Sparkles size={14} />
-                  {isGenerating ? "Generating..." : "Generate with AI"}
-                </button>
-              </div>
-              <textarea
-                name="description"
-                value={formData.description || ""}
+              <label className="block text-xs font-medium text-zinc-400 mb-1.5">
+                Product Name *
+              </label>
+              <input
+                type="text"
+                name="name"
+                value={formData.name || ""}
                 onChange={handleChange}
-                rows={3}
-                placeholder="Click 'Generate with AI' or manually enter a description..."
+                required
                 className={`${inputStyles} !pr-3`}
               />
             </div>
             <div>
-              <ImageUploader
-                onUploadSuccess={handleMediaUploadSuccess}
-                initialMedia={product.images}
+              <label className="block text-xs font-medium text-zinc-400 mb-1.5">
+                SKU *
+              </label>
+              <input
+                type="text"
+                name="sku"
+                value={formData.sku || ""}
+                onChange={handleChange}
+                required
+                className={`${inputStyles} !pr-3`}
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-zinc-400 mb-1.5">
+                Category
+              </label>
+              <input
+                type="text"
+                name="category"
+                value={formData.category || ""}
+                onChange={handleChange}
+                className={`${inputStyles} !pr-3`}
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-zinc-400 mb-1.5">
+                Supplier
+              </label>
+              <input
+                type="text"
+                name="supplier"
+                value={formData.supplier || ""}
+                onChange={handleChange}
+                className={`${inputStyles} !pr-3`}
               />
             </div>
           </div>
 
-          {error && (
-            <p className="text-red-400 text-sm pt-2 text-center">{error}</p>
-          )}
-
-          <div className="pt-6 flex justify-end gap-3">
-            <button
-              type="button"
-              onClick={onClose}
-              className="bg-zinc-700 hover:bg-zinc-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={loading}
-              className="bg-cyan-600 hover:bg-cyan-700 text-white font-semibold py-2 px-4 rounded-lg disabled:opacity-50 disabled:cursor-wait transition-colors"
-            >
-              {loading ? "Saving..." : "Save Changes"}
-            </button>
+          {/* Column 2 */}
+          <div className="space-y-5">
+            <div>
+              <label className="block text-xs font-medium text-zinc-400 mb-1.5">
+                Stock Quantity *
+              </label>
+              <div className="relative">
+                <input
+                  type="number"
+                  name="stock_quantity"
+                  value={formData.stock_quantity ?? ""}
+                  onChange={handleChange}
+                  required
+                  min="0"
+                  className={`${inputStyles} [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none`}
+                />
+                <div className="absolute inset-y-0 right-0 flex items-center">
+                  <button
+                    type="button"
+                    onClick={() => handleStepChange("stock_quantity", -1)}
+                    disabled={Number(formData.stock_quantity) <= 0}
+                    className="px-2 text-zinc-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed"
+                  >
+                    <Minus size={16} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleStepChange("stock_quantity", 1)}
+                    className="px-2 text-zinc-400 hover:text-white"
+                  >
+                    <Plus size={16} />
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-zinc-400 mb-1.5">
+                Reorder Level
+              </label>
+              <div className="relative">
+                <input
+                  type="number"
+                  name="reorder_level"
+                  value={formData.reorder_level ?? ""}
+                  onChange={handleChange}
+                  min="0"
+                  className={`${inputStyles} [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none`}
+                />
+                <div className="absolute inset-y-0 right-0 flex items-center">
+                  <button
+                    type="button"
+                    onClick={() => handleStepChange("reorder_level", -1)}
+                    disabled={Number(formData.reorder_level) <= 0}
+                    className="px-2 text-zinc-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed"
+                  >
+                    <Minus size={16} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleStepChange("reorder_level", 1)}
+                    className="px-2 text-zinc-400 hover:text-white"
+                  >
+                    <Plus size={16} />
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-zinc-400 mb-1.5">
+                Cost Price (₹)
+              </label>
+              <div className="relative">
+                <input
+                  type="number"
+                  name="cost_price"
+                  value={formData.cost_price ?? ""}
+                  onChange={handleChange}
+                  min="0"
+                  step="0.01"
+                  className={`${inputStyles} [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none`}
+                />
+                <div className="absolute inset-y-0 right-0 flex items-center">
+                  <button
+                    type="button"
+                    onClick={() => handleStepChange("cost_price", -1)}
+                    disabled={Number(formData.cost_price) <= 0}
+                    className="px-2 text-zinc-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed"
+                  >
+                    <Minus size={16} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleStepChange("cost_price", 1)}
+                    className="px-2 text-zinc-400 hover:text-white"
+                  >
+                    <Plus size={16} />
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-zinc-400 mb-1.5">
+                Selling Price (₹)
+              </label>
+              <div className="relative">
+                <input
+                  type="number"
+                  name="selling_price"
+                  value={formData.selling_price ?? ""}
+                  onChange={handleChange}
+                  min="0"
+                  step="0.01"
+                  className={`${inputStyles} [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none`}
+                />
+                <div className="absolute inset-y-0 right-0 flex items-center">
+                  <button
+                    type="button"
+                    onClick={() => handleStepChange("selling_price", -1)}
+                    disabled={Number(formData.selling_price) <= 0}
+                    className="px-2 text-zinc-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed"
+                  >
+                    <Minus size={16} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleStepChange("selling_price", 1)}
+                    className="px-2 text-zinc-400 hover:text-white"
+                  >
+                    <Plus size={16} />
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-zinc-400 mb-1.5">
+                Status (Auto)
+              </label>
+              <select
+                name="status"
+                value={formData.status || ""}
+                disabled
+                className={`${inputStyles} !pr-3 disabled:opacity-70 disabled:cursor-not-allowed`}
+              >
+                <option>In Stock</option>
+                <option>Low Stock</option>
+                <option>Out of Stock</option>
+              </select>
+            </div>
           </div>
-        </form>
-      </div>
-    </div>
+        </div>
+
+        <div className="pt-2 space-y-6">
+          <div>
+            <div className="flex justify-between items-center mb-1.5">
+              <label className="block text-xs font-medium text-zinc-400">
+                AI Generated Description
+              </label>
+              <button
+                type="button"
+                onClick={handleGenerateDescription}
+                disabled={isGenerating || !formData.name}
+                className="flex items-center gap-1.5 text-xs bg-purple-600/20 text-purple-300 px-2.5 py-1.5 rounded-md hover:bg-purple-600/40 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                <Sparkles size={14} />
+                {isGenerating ? "Generating..." : "Generate with AI"}
+              </button>
+            </div>
+            <textarea
+              name="description"
+              value={formData.description || ""}
+              onChange={handleChange}
+              rows={3}
+              placeholder="Click 'Generate with AI' or manually enter a description..."
+              className={`${inputStyles} !pr-3`}
+            />
+          </div>
+          <div>
+            <ImageUploader
+              onUploadSuccess={handleMediaUploadSuccess}
+              initialMedia={product.images}
+            />
+          </div>
+        </div>
+
+        {error && (
+          <p className="text-red-400 text-sm pt-2 text-center">{error}</p>
+        )}
+
+        <div className="pt-6 flex justify-end gap-3">
+          <button
+            type="button"
+            onClick={onClose}
+            className="bg-zinc-700 hover:bg-zinc-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            disabled={loading}
+            className="bg-cyan-600 hover:bg-cyan-700 text-white font-semibold py-2 px-4 rounded-lg disabled:opacity-50 disabled:cursor-wait transition-colors"
+          >
+            {loading ? "Saving..." : "Save Changes"}
+          </button>
+        </div>
+      </form>
+    </ModalLayout>
   );
 };
