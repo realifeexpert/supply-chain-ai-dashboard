@@ -138,10 +138,24 @@ class OrderUpdate(BaseModel):
     def empty_str_to_none(cls, v):
         if v == "": return None
         return v
+    
+class ItemProductDetailWithPrice(BaseModel):
+    name: str
+    sku: str
+    selling_price: float
+    gst_rate: float
+    class Config:
+        from_attributes = True
+
+class ItemInOrderResponse(BaseModel):
+    quantity: int
+    product: ItemProductDetailWithPrice
+    class Config:
+        from_attributes = True    
 
 # This schema is for API responses and will correctly show all calculated details.
 class Order(OrderBase):
-    id: int; order_date: datetime; items: List[ItemInOrder]
+    id: int; order_date: datetime; items: List[ItemInOrderResponse]
     class Config: from_attributes = True
 
 # --- App Settings & Analytics Schemas (Unchanged) ---

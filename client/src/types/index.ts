@@ -38,6 +38,8 @@ export interface MediaItem {
 export interface ItemProductDetail {
   name: string;
   sku: string;
+  selling_price: number; // ADD THIS
+  gst_rate: number; // ADD THIS
 }
 
 // Represents an Item with its quantity inside an Order
