@@ -11,9 +11,9 @@ import {
   PanelLeft,
   Menu,
   X,
+  FileUp,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-// --- CHANGE 1: Import the new SettingsModal ---
 import { SettingsModal } from "@/components/settings/SettingsModal";
 
 // NavItem Component (No Change)
@@ -52,12 +52,14 @@ const NavItem: React.FC<NavItemProps> = ({
   </NavLink>
 );
 
+// --- CHANGE: Re-ordered navItems list ---
 const navItems = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard },
   { to: "/analytics", label: "Analytics", icon: BarChart2 },
   { to: "/orders", label: "Orders", icon: Package },
   { to: "/inventory", label: "Inventory", icon: Package },
   { to: "/logistics", label: "Logistics", icon: Truck },
+  { to: "/import", label: "Import / Export", icon: FileUp }, // Moved here
   { to: "/users", label: "Users", icon: Users },
 ];
 
@@ -93,6 +95,7 @@ const MobileSidebar: React.FC<{
           </div>
           <div className="flex-1 overflow-y-auto">
             <nav className="grid items-start p-2 text-sm font-medium">
+              {/* Renders the updated navItems list */}
               {navItems.map((item) => (
                 <NavItem key={item.to} {...item} isExpanded={true} />
               ))}
@@ -104,17 +107,14 @@ const MobileSidebar: React.FC<{
   );
 };
 
-// Main DashboardLayout Component
+// Main DashboardLayout Component (No structural change)
 const DashboardLayout: React.FC = () => {
   const [isSidebarExpanded, setIsSidebarExpanded] = useState(true);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
-
-  // --- CHANGE 2: New state to control the Settings modal ---
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
 
   return (
     <>
-      {/* --- CHANGE 3: Render the SettingsModal here --- */}
       <SettingsModal
         isOpen={isSettingsModalOpen}
         onClose={() => setIsSettingsModalOpen(false)}
@@ -160,6 +160,7 @@ const DashboardLayout: React.FC = () => {
             </div>
             <div className="flex-1 overflow-y-auto">
               <nav className="grid items-start px-2 text-sm font-medium">
+                {/* Renders the updated navItems list */}
                 {navItems.map((item) => (
                   <NavItem
                     key={item.to}
@@ -182,8 +183,6 @@ const DashboardLayout: React.FC = () => {
             </button>
             <div className="w-full flex-1"></div>
             <Bell className="h-5 w-5 text-zinc-400" />
-
-            {/* --- CHANGE 4: Make the Settings icon clickable --- */}
             <button
               onClick={() => setIsSettingsModalOpen(true)}
               className="p-1 rounded-full hover:bg-zinc-700/50"

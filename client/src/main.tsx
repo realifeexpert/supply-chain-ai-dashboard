@@ -11,6 +11,8 @@ import OrdersPage from "@/pages/OrdersPage";
 import InventoryPage from "@/pages/InventoryPage";
 import LogisticsPage from "@/pages/LogisticsPage";
 import UsersPage from "@/pages/UsersPage";
+// --- CHANGE 1: Added new ImportPage component ---
+import ImportPage from "@/pages/ImportPage";
 
 const router = createBrowserRouter([
   {
@@ -21,6 +23,8 @@ const router = createBrowserRouter([
       { path: "analytics", element: <AnalyticsPage /> },
       { path: "orders", element: <OrdersPage /> },
       { path: "inventory", element: <InventoryPage /> },
+      // --- CHANGE 2: Added new route ---
+      { path: "import", element: <ImportPage /> },
       { path: "logistics", element: <LogisticsPage /> },
       { path: "users", element: <UsersPage /> },
     ],
