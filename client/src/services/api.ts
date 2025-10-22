@@ -91,7 +91,7 @@ export const uploadOrdersCSV = (file: File) => {
   });
 };
 
-// --- !! NEW !! CSV EXPORT FUNCTIONS ---
+// --- CSV EXPORT FUNCTIONS ---
 
 /**
  * Fetches the inventory data as a CSV file blob.
@@ -107,6 +107,26 @@ export const exportInventoryCSV = () => {
  */
 export const exportOrdersCSV = () => {
   return apiClient.get("/bulk/orders/export-csv", {
+    responseType: "blob", // Important: tells axios to download file data
+  });
+};
+
+// --- !! NEW !! CSV TEMPLATE DOWNLOAD FUNCTIONS ---
+
+/**
+ * Fetches the inventory import template CSV file blob.
+ */
+export const downloadInventoryTemplate = () => {
+  return apiClient.get("/bulk/inventory/template", {
+    responseType: "blob", // Important: tells axios to download file data
+  });
+};
+
+/**
+ * Fetches the orders import template CSV file blob.
+ */
+export const downloadOrderTemplate = () => {
+  return apiClient.get("/bulk/orders/template", {
     responseType: "blob", // Important: tells axios to download file data
   });
 };

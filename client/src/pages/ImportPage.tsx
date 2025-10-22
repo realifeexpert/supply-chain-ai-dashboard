@@ -6,17 +6,19 @@ import {
   CheckCircle,
   AlertCircle,
   FileDown,
+  Download, // --- CHANGE 1: Naya 'Download' icon import karein ---
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-// --- CHANGE 1: Naye 'export' functions aur 'saveAs' ko import karein ---
 import {
   uploadInventoryCSV,
   uploadOrdersCSV,
-  exportInventoryCSV, // Naya import
-  exportOrdersCSV, // Naya import
+  exportInventoryCSV,
+  exportOrdersCSV,
+  // --- CHANGE 2: Naye template functions import karein ---
+  downloadInventoryTemplate,
+  downloadOrderTemplate,
 } from "@/services/api";
-import { saveAs } from "file-saver"; // Naya import
+import { saveAs } from "file-saver";
 
 // --- Dropzone Component (No Change) ---
 interface DropzoneProps {
@@ -76,6 +78,11 @@ const ImportPage: React.FC = () => {
   const [invExportLoading, setInvExportLoading] = useState(false);
   const [orderExportLoading, setOrderExportLoading] = useState(false);
   const [exportError, setExportError] = useState<string | null>(null);
+
+  // --- CHANGE 3: Template download ke liye naye states ---
+  const [invTemplateLoading, setInvTemplateLoading] = useState(false);
+  const [orderTemplateLoading, setOrderTemplateLoading] = useState(false);
+  // (Hum 'exportError' ko hi template errors ke liye reuse kar lenge)
 
   // Import Handlers (No Change)
   const onInventoryDrop = useCallback(async (acceptedFiles: File[]) => {
@@ -148,16 +155,12 @@ const ImportPage: React.FC = () => {
     }
   }, []);
 
-  // --- CHANGE 3: Export handlers ko update karein ---
-
-  // Inventory Export Handler
+  // Export Handlers (No Change)
   const handleInventoryExport = useCallback(async () => {
     setInvExportLoading(true);
     setExportError(null);
     try {
-      // Asli API call karein
       const response = await exportInventoryCSV();
-      // File ko 'saveAs' se download karein
       saveAs(response.data, "inventory_export.csv");
     } catch (err) {
       console.error(err);
@@ -167,20 +170,46 @@ const ImportPage: React.FC = () => {
     }
   }, []);
 
-  // Orders Export Handler
   const handleOrdersExport = useCallback(async () => {
     setOrderExportLoading(true);
     setExportError(null);
     try {
-      // Asli API call karein
       const response = await exportOrdersCSV();
-      // File ko 'saveAs' se download karein
       saveAs(response.data, "orders_export.csv");
     } catch (err) {
       console.error(err);
       setExportError("Failed to export orders.");
     } finally {
       setOrderExportLoading(false);
+    }
+  }, []);
+
+  // --- CHANGE 4: Template download ke liye naye handlers ---
+  const handleInventoryTemplateDownload = useCallback(async () => {
+    setInvTemplateLoading(true);
+    setExportError(null); // Clear previous errors
+    try {
+      const response = await downloadInventoryTemplate();
+      saveAs(response.data, "inventory_import_template.csv");
+    } catch (err) {
+      console.error(err);
+      setExportError("Failed to download inventory template.");
+    } finally {
+      setInvTemplateLoading(false);
+    }
+  }, []);
+
+  const handleOrderTemplateDownload = useCallback(async () => {
+    setOrderTemplateLoading(true);
+    setExportError(null); // Clear previous errors
+    try {
+      const response = await downloadOrderTemplate();
+      saveAs(response.data, "orders_import_template.csv");
+    } catch (err) {
+      console.error(err);
+      setExportError("Failed to download orders template.");
+    } finally {
+      setOrderTemplateLoading(false);
     }
   }, []);
 
@@ -193,7 +222,7 @@ const ImportPage: React.FC = () => {
         </p>
       </div>
 
-      {/* Common Error message for Export */}
+      {/* Common Error message for Export/Template Download */}
       {exportError && (
         <div className="mb-4 p-3 rounded-md bg-red-500/10 border border-red-500/30 text-red-300 flex items-center gap-3">
           <AlertCircle size={16} /> <p className="text-sm">{exportError}</p>
@@ -205,7 +234,6 @@ const ImportPage: React.FC = () => {
         <div className="border-t border-zinc-800 pt-6 flex flex-col gap-4">
           <div className="flex justify-between items-center">
             <h2 className="text-lg font-semibold text-white">Inventory</h2>
-            {/* Inventory Export Button (No change) */}
             <button
               onClick={handleInventoryExport}
               disabled={invExportLoading}
@@ -225,6 +253,21 @@ const ImportPage: React.FC = () => {
             loading={invLoading}
             title="Drag & drop Inventory CSV to Import"
           />
+
+          {/* --- CHANGE 5: Inventory Template Button --- */}
+          <button
+            onClick={handleInventoryTemplateDownload}
+            disabled={invTemplateLoading}
+            className="flex items-center justify-center gap-2 py-1.5 text-xs text-zinc-400 rounded-md hover:text-white hover:bg-zinc-800 disabled:opacity-50 transition-colors"
+          >
+            {invTemplateLoading ? (
+              <Loader className="h-4 w-4 animate-spin" />
+            ) : (
+              <Download className="h-4 w-4" />
+            )}
+            Download Template
+          </button>
+
           {invSuccess && (
             <div className="mt-4 p-3 rounded-md bg-green-500/10 border border-green-500/30 text-green-300 flex items-center gap-3">
               <CheckCircle size={16} /> <p className="text-sm">{invSuccess}</p>
@@ -241,7 +284,6 @@ const ImportPage: React.FC = () => {
         <div className="border-t border-zinc-800 pt-6 flex flex-col gap-4">
           <div className="flex justify-between items-center">
             <h2 className="text-lg font-semibold text-white">Orders</h2>
-            {/* Orders Export Button (No change) */}
             <button
               onClick={handleOrdersExport}
               disabled={orderExportLoading}
@@ -261,6 +303,21 @@ const ImportPage: React.FC = () => {
             loading={orderLoading}
             title="Drag & drop Orders CSV to Import"
           />
+
+          {/* --- CHANGE 6: Orders Template Button --- */}
+          <button
+            onClick={handleOrderTemplateDownload}
+            disabled={orderTemplateLoading}
+            className="flex items-center justify-center gap-2 py-1.5 text-xs text-zinc-400 rounded-md hover:text-white hover:bg-zinc-800 disabled:opacity-50 transition-colors"
+          >
+            {orderTemplateLoading ? (
+              <Loader className="h-4 w-4 animate-spin" />
+            ) : (
+              <Download className="h-4 w-4" />
+            )}
+            Download Template
+          </button>
+
           {orderSuccess && (
             <div className="mt-4 p-3 rounded-md bg-green-500/10 border border-green-500/30 text-green-300 flex items-center gap-3">
               <CheckCircle size={16} />{" "}

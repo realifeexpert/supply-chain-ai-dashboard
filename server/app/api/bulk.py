@@ -1,7 +1,6 @@
 import csv
 import io
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
-# --- CHANGE 1: Import StreamingResponse ---
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session, joinedload
 from typing import List, Dict, Optional
@@ -51,7 +50,7 @@ async def upload_inventory_csv(file: UploadFile = File(...), db: Session = Depen
     """
     Bulk imports products from a CSV file.
     """
-    # ... (Poora inventory upload code yahan hai, koi change nahi) ...
+    # ... (Inventory upload code remains unchanged) ...
     if not file.filename.endswith('.csv'):
         raise HTTPException(status_code=400, detail="Invalid file type. Please upload a .csv file.")
     low_stock_threshold = get_low_stock_threshold(db)
@@ -113,7 +112,6 @@ async def upload_inventory_csv(file: UploadFile = File(...), db: Session = Depen
         errors=errors
     )
 
-
 # --- Orders CSV Upload (Unchanged) ---
 @router.post("/orders/upload-csv", response_model=OrderUploadResponse)
 async def upload_orders_csv(file: UploadFile = File(...), db: Session = Depends(get_db)):
@@ -121,7 +119,7 @@ async def upload_orders_csv(file: UploadFile = File(...), db: Session = Depends(
     Bulk imports multiple orders from a CSV file.
     Uses professional calculation logic.
     """
-    # ... (Poora order upload code yahan hai, koi change nahi) ...
+    # ... (Order upload code remains unchanged) ...
     if not file.filename.endswith('.csv'):
         raise HTTPException(status_code=400, detail="Invalid file type. Please upload a .csv file.")
     contents = await file.read()
@@ -262,12 +260,14 @@ async def upload_orders_csv(file: UploadFile = File(...), db: Session = Depends(
         errors=final_errors
     )
 
+
 # --- Inventory Export Endpoint (Unchanged) ---
 @router.get("/inventory/export-csv")
 async def export_inventory_csv(db: Session = Depends(get_db)):
     """
     Exports all inventory products to a CSV file.
     """
+    # ... (Inventory export code remains unchanged) ...
     output = io.StringIO()
     headers = [
         "name", "sku", "stock_quantity", "category", "supplier",
@@ -275,7 +275,6 @@ async def export_inventory_csv(db: Session = Depends(get_db)):
     ]
     writer = csv.DictWriter(output, fieldnames=headers)
     writer.writeheader()
-    
     products = db.query(models.Product).all()
     for product in products:
         writer.writerow({
@@ -290,7 +289,6 @@ async def export_inventory_csv(db: Session = Depends(get_db)):
             "gst_rate": product.gst_rate,
             "status": product.status.value if product.status else None
         })
-    
     output.seek(0)
     return StreamingResponse(
         output,
@@ -298,14 +296,14 @@ async def export_inventory_csv(db: Session = Depends(get_db)):
         headers={"Content-Disposition": "attachment; filename=inventory_export.csv"}
     )
 
-# --- CHANGE 2: ORDERS EXPORT ENDPOINT (FIXED) ---
+# --- Orders Export Endpoint (Unchanged) ---
 @router.get("/orders/export-csv")
 async def export_orders_csv(db: Session = Depends(get_db)):
     """
     Exports all orders and their items to a CSV file.
     """
+    # ... (Order export code remains unchanged, including the fix for 'created_at') ...
     output = io.StringIO()
-    # --- CHANGE 3: Removed 'created_at' from headers ---
     headers = [
         "order_group_id", "customer_name", "customer_email", "shipping_address",
         "payment_method", "item_sku", "item_quantity",
@@ -314,11 +312,9 @@ async def export_orders_csv(db: Session = Depends(get_db)):
     ]
     writer = csv.DictWriter(output, fieldnames=headers)
     writer.writeheader()
-    
     orders = db.query(models.Order).options(
         joinedload(models.Order.items).joinedload(models.OrderItem.product)
     ).all()
-    
     for order in orders:
         if not order.items:
             writer.writerow({
@@ -337,7 +333,6 @@ async def export_orders_csv(db: Session = Depends(get_db)):
                 "total_amount": order.total_amount,
                 "status": order.status.value if order.status else None,
                 "payment_status": order.payment_status.value if order.payment_status else None,
-                # --- CHANGE 4: Removed 'created_at' line ---
             })
         else:
             for item in order.items:
@@ -357,12 +352,54 @@ async def export_orders_csv(db: Session = Depends(get_db)):
                     "total_amount": order.total_amount,
                     "status": order.status.value if order.status else None,
                     "payment_status": order.payment_status.value if order.payment_status else None,
-                    # --- CHANGE 5: Removed 'created_at' line ---
                 })
-
     output.seek(0)
     return StreamingResponse(
         output,
         media_type="text/csv",
         headers={"Content-Disposition": "attachment; filename=orders_export.csv"}
+    )
+
+
+# --- !! NEW !! TEMPLATE DOWNLOAD ENDPOINTS ---
+
+@router.get("/inventory/template")
+async def download_inventory_template():
+    """
+    Provides a CSV template file with only the required headers for inventory import.
+    """
+    output = io.StringIO()
+    headers = [
+        "name", "sku", "stock_quantity", "category", "supplier",
+        "reorder_level", "cost_price", "selling_price", "gst_rate"
+    ]
+    writer = csv.writer(output)
+    writer.writerow(headers) # Only write the header row
+    
+    output.seek(0)
+    return StreamingResponse(
+        output,
+        media_type="text/csv",
+        headers={"Content-Disposition": "attachment; filename=inventory_import_template.csv"}
+    )
+
+@router.get("/orders/template")
+async def download_orders_template():
+    """
+    Provides a CSV template file with only the required headers for orders import.
+    """
+    output = io.StringIO()
+    headers = [
+        "order_group_id", "customer_name", "customer_email", "shipping_address",
+        "payment_method", "item_sku", "item_quantity",
+        "discount_type", "discount_value", "shipping_charges"
+    ]
+    writer = csv.writer(output)
+    writer.writerow(headers) # Only write the header row
+    
+    output.seek(0)
+    return StreamingResponse(
+        output,
+        media_type="text/csv",
+        headers={"Content-Disposition": "attachment; filename=orders_import_template.csv"}
     )
