@@ -15,7 +15,7 @@ class Settings(BaseSettings):
     # Groq AI Credentials for Description Generation (Required for inventory feature)
     GROQ_API_KEY: str
     # --- UPDATE: Added the Groq model name with a default value ---
-    GROQ_MODEL_NAME: str = "gemma2-9b-it" 
+    GROQ_MODEL_NAME: str = "llama-3.1-8b-instant" 
 
     # Security Key (Optional for now, as you requested)
     SECRET_KEY: Optional[str] = None

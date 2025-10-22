@@ -44,7 +44,7 @@ async def generate_ai_description(request: DescriptionRequest):
                 }
             ],
             # --- YAHAN FINAL BADLAAV KIYA GAYA HAI ---
-            model="gemma2-9b-it", # Naya, stable model istemaal kiya gaya
+            model=settings.GROQ_MODEL_NAME, 
             temperature=0.7,
             max_tokens=100,
         )
