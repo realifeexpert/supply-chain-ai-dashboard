@@ -1,5 +1,5 @@
 from pydantic import BaseModel, validator
-from typing import Optional, List
+from typing import Optional, List, Dict # Added Dict
 from datetime import datetime
 from enum import Enum
 
@@ -26,7 +26,6 @@ class MediaType(str, Enum):
     image = "image"; video = "video"
 
 # --- Product Schemas (Unchanged) ---
-# ... (All product schemas remain the same)
 class ProductImageResponse(BaseModel):
     id: int; media_url: str; media_type: MediaType
     class Config: from_attributes = True
@@ -55,7 +54,6 @@ class Product(ProductBase):
 
 
 # --- Order Item Schemas (Unchanged) ---
-# ... (Order item schemas remain the same)
 class ItemProductDetail(BaseModel):
     name: str; sku: str
     class Config: from_attributes = True
@@ -65,7 +63,6 @@ class ItemInOrder(BaseModel):
 
 
 # --- User & Vehicle Schemas (Unchanged) ---
-# ... (User and vehicle schemas remain the same)
 class UserBase(BaseModel):
     name: str; email: str; role: UserRole = UserRole.user
 class UserCreate(UserBase):
@@ -87,7 +84,6 @@ class Vehicle(VehicleBase):
 class OrderItemCreate(BaseModel):
     product_id: int; quantity: int
 
-# UPDATED: OrderBase now includes all the new financial fields for response models.
 class OrderBase(BaseModel):
     customer_name: str; customer_email: str; shipping_address: str
     
@@ -107,7 +103,6 @@ class OrderBase(BaseModel):
     tracking_id: Optional[str] = None
     vehicle_id: Optional[int] = None
 
-# UPDATED: OrderCreate now includes old optional fields AND new financial fields for the payload.
 class OrderCreate(BaseModel):
     customer_name: str
     customer_email: str
@@ -153,26 +148,40 @@ class ItemInOrderResponse(BaseModel):
     class Config:
         from_attributes = True    
 
-# This schema is for API responses and will correctly show all calculated details.
 class Order(OrderBase):
     id: int; order_date: datetime; items: List[ItemInOrderResponse]
     class Config: from_attributes = True
 
-# --- App Settings & Analytics Schemas (Unchanged) ---
-# ... (All other schemas remain the same)
+# --- App Settings Schemas (Unchanged) ---
 class AppSetting(BaseModel):
     setting_key: str; setting_value: str
     class Config: from_attributes = True
 class AppSettingsUpdate(BaseModel):
     settings: List[AppSetting]
+
+# --- Analytics Schemas ---
 class KpiCard(BaseModel):
     title: str; value: str; change: str
 class TopProduct(BaseModel):
     name: str; value: int
 class DeliveryStatusChart(BaseModel):
     on_time: int; delayed: int
+
+# --- NEW SCHEMA ---
+class OrderStatusBreakdownItem(BaseModel):
+    status: str # e.g., "Pending", "Processing"
+    value: int  # Count for that status
+
 class AnalyticsSummary(BaseModel):
-    kpi_cards: List[KpiCard]; top_selling_products: List[TopProduct]; delivery_status: DeliveryStatusChart
+    kpi_cards: List[KpiCard] # Updated type hint based on KpiCard model
+    top_selling_products: List[TopProduct] # Updated type hint based on TopProduct model
+    delivery_status: DeliveryStatusChart # Updated type hint based on DeliveryStatusChart model
+    # --- ADDED THIS NEW FIELD ---
+    order_status_breakdown: List[OrderStatusBreakdownItem]
+
+    class Config:
+        from_attributes = True # Updated from orm_mode for Pydantic v2 consistency
+
 class ForecastDataPoint(BaseModel):
     date: str; value: int
 class DemandForecast(BaseModel):

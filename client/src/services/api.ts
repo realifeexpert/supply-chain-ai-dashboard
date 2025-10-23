@@ -24,6 +24,18 @@ const apiClient = axios.create({
   },
 });
 
+// Type for Daily Revenue Data
+export interface RevenueDataPoint {
+  date: string; // 'YYYY-MM-DD'
+  revenue: number;
+}
+
+// --- CHANGE 1: Define type for Monthly Revenue Data ---
+export interface MonthlyRevenueDataPoint {
+  month: string; // e.g., "Jan", "Feb"
+  revenue: number;
+}
+
 // -- Data Fetching Functions --
 export const getDashboardSummary = () =>
   apiClient.get<AnalyticsSummary>("/analytics/summary");
@@ -33,6 +45,25 @@ export const getOrders = () => apiClient.get<Order[]>("/orders/");
 export const getVehicles = () =>
   apiClient.get<Vehicle[]>("/logistics/vehicles");
 export const getUsers = () => apiClient.get<User[]>("/users/");
+
+// Fetches daily revenue
+export const getRevenueOverTime = (days: number = 30) =>
+  apiClient.get<{ data: RevenueDataPoint[] }>("/analytics/revenue-over-time", {
+    params: { days },
+  });
+
+// --- CHANGE 2: Add function to fetch Monthly Revenue ---
+/**
+ * Fetches revenue data grouped by month for the specified number of months.
+ * @param months Number of past months to fetch data for (default: 6).
+ */
+export const getMonthlyRevenue = (months: number = 6) =>
+  apiClient.get<{ data: MonthlyRevenueDataPoint[] }>(
+    "/analytics/monthly-revenue",
+    {
+      params: { months }, // Pass 'months' as a query parameter
+    }
+  );
 
 // -- Data Creation Functions --
 export const createUser = (userData: UserCreate) =>
@@ -72,7 +103,6 @@ export const updateSettings = (settingsData: AppSettingsUpdate) =>
 export const uploadInventoryCSV = (file: File) => {
   const formData = new FormData();
   formData.append("file", file);
-
   return apiClient.post<{
     message: string;
     products_added: number;
@@ -80,72 +110,40 @@ export const uploadInventoryCSV = (file: File) => {
     errors: string[];
     error_report_id?: string;
   }>("/bulk/inventory/upload-csv", formData, {
-    headers: {
-      "Content-Type": "multipart/form-data",
-    },
+    headers: { "Content-Type": "multipart/form-data" },
   });
 };
-
 export const uploadOrdersCSV = (file: File) => {
   const formData = new FormData();
   formData.append("file", file);
-
-  // --- Ensure this expects error_report_id too ---
   return apiClient.post<{
     message: string;
     orders_created: number;
     errors: string[];
-    error_report_id?: string; // Expect this optional field
+    error_report_id?: string;
   }>("/bulk/orders/upload-csv", formData, {
-    headers: {
-      "Content-Type": "multipart/form-data",
-    },
+    headers: { "Content-Type": "multipart/form-data" },
   });
 };
 
 // --- CSV EXPORT FUNCTIONS ---
-export const exportInventoryCSV = () => {
-  return apiClient.get("/bulk/inventory/export-csv", {
-    responseType: "blob",
-  });
-};
-export const exportOrdersCSV = () => {
-  return apiClient.get("/bulk/orders/export-csv", {
-    responseType: "blob",
-  });
-};
+export const exportInventoryCSV = () =>
+  apiClient.get("/bulk/inventory/export-csv", { responseType: "blob" });
+export const exportOrdersCSV = () =>
+  apiClient.get("/bulk/orders/export-csv", { responseType: "blob" });
 
 // --- CSV TEMPLATE DOWNLOAD FUNCTIONS ---
-export const downloadInventoryTemplate = () => {
-  return apiClient.get("/bulk/inventory/template", {
-    responseType: "blob",
-  });
-};
-export const downloadOrderTemplate = () => {
-  return apiClient.get("/bulk/orders/template", {
-    responseType: "blob",
-  });
-};
+export const downloadInventoryTemplate = () =>
+  apiClient.get("/bulk/inventory/template", { responseType: "blob" });
+export const downloadOrderTemplate = () =>
+  apiClient.get("/bulk/orders/template", { responseType: "blob" });
 
 // --- ERROR FILE DOWNLOAD FUNCTIONS ---
-
-/**
- * Downloads the CSV file containing rows that failed during inventory import.
- * @param reportId The unique ID of the error report.
- */
-export const downloadInventoryErrorFile = (reportId: string) => {
-  return apiClient.get(`/bulk/inventory/download-errors/${reportId}`, {
+export const downloadInventoryErrorFile = (reportId: string) =>
+  apiClient.get(`/bulk/inventory/download-errors/${reportId}`, {
     responseType: "blob",
   });
-};
-
-/**
- * Downloads the CSV file containing rows that failed during order import.
- * @param reportId The unique ID of the error report.
- */
-export const downloadOrderErrorFile = (reportId: string) => {
-  return apiClient.get(`/bulk/orders/download-errors/${reportId}`, {
-    // Updated URL
+export const downloadOrderErrorFile = (reportId: string) =>
+  apiClient.get(`/bulk/orders/download-errors/${reportId}`, {
     responseType: "blob",
   });
-};

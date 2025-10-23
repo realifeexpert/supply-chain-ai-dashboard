@@ -1,25 +1,21 @@
 import React, { useEffect, useState } from "react";
-// UPDATE: .ts extension add kiya gaya hai taaki Vite isey sahi se dhoondh sake
-import { getDashboardSummary } from "@/services/api.ts";
+// Path aliases ka use
 import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-  Legend,
-} from "recharts";
-import { Download, AlertTriangle } from "lucide-react";
+  getDashboardSummary,
+  getRevenueOverTime,
+  type RevenueDataPoint,
+} from "@/services/api";
 import type { AnalyticsSummary } from "@/types";
+// Lucide icons
+import { Download, AlertTriangle, TrendingUp, ListChecks } from "lucide-react";
+// Sabhi analytics components ko ek jagah se import kiya (index.ts file se)
+import { KpiCardGrid } from "@/components/Analytics/KpiCardGrid";
+import { TopProductsChart } from "@/components/Analytics/TopProductsChart";
+import { DeliveryPieChart } from "@/components/Analytics/DeliveryPieChart";
+import { OrderStatusChart } from "@/components/Analytics/OrderStatusChart";
+import { RevenueChart } from "@/components/Analytics/RevenueChart";
 
-// Donut chart ke liye colors
-const COLORS = ["#22d3ee", "#f43f5e"]; // Cyan for On-Time, Red for Delayed
-
-// --- [NEW] Confirmation Modal Component ---
+// --- Confirmation Modal Component (Poora code) ---
 interface ConfirmationModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -36,7 +32,6 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
   message,
 }) => {
   if (!isOpen) return null;
-
   return (
     <div className="fixed inset-0 bg-black/60 z-50 flex justify-center items-center p-4">
       <div className="bg-zinc-900 rounded-lg shadow-xl p-6 w-full max-w-sm relative border border-zinc-700 text-center">
@@ -65,134 +60,93 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
     </div>
   );
 };
-
-// --- TOP SELLING PRODUCTS CHART ---
-const TopProductsChart: React.FC<{
-  data: AnalyticsSummary["top_selling_products"];
-}> = ({ data }) => (
-  <div style={{ width: "100%", height: 300 }}>
-    <ResponsiveContainer>
-      <BarChart data={data} layout="vertical" margin={{ left: 20 }}>
-        <XAxis type="number" hide />
-        <YAxis
-          type="category"
-          dataKey="name"
-          stroke="#a1a1aa"
-          fontSize={12}
-          tickLine={false}
-          axisLine={false}
-          width={100}
-        />
-        <Tooltip
-          cursor={{ fill: "#ffffff10" }}
-          contentStyle={{
-            backgroundColor: "#18181b",
-            border: "1px solid #3f3f46",
-            borderRadius: "0.5rem",
-          }}
-          labelStyle={{ color: "#a1a1aa" }}
-        />
-        <Bar
-          dataKey="value"
-          fill="#38bdf8"
-          radius={[0, 4, 4, 0]}
-          background={{ fill: "#ffffff10", radius: 4 }}
-        />
-      </BarChart>
-    </ResponsiveContainer>
-  </div>
-);
-
-// --- DELIVERY STATUS PIE CHART ---
-const DeliveryPieChart: React.FC<{
-  data: AnalyticsSummary["delivery_status"];
-}> = ({ data }) => {
-  const chartData = [
-    { name: "On-Time", value: data.on_time },
-    { name: "Delayed", value: data.delayed },
-  ];
-
-  return (
-    <div style={{ width: "100%", height: 300 }}>
-      <ResponsiveContainer>
-        <PieChart>
-          <Pie
-            data={chartData}
-            cx="50%"
-            cy="50%"
-            innerRadius={60}
-            outerRadius={80}
-            fill="#8884d8"
-            paddingAngle={5}
-            dataKey="value"
-          >
-            {chartData.map((_, index) => (
-              <Cell
-                key={`cell-${index}`}
-                fill={COLORS[index % COLORS.length]}
-              />
-            ))}
-          </Pie>
-          <Tooltip
-            contentStyle={{
-              backgroundColor: "#18181b",
-              border: "1px solid #3f3f46",
-              borderRadius: "0.5rem",
-            }}
-          />
-          <Legend iconType="circle" />
-        </PieChart>
-      </ResponsiveContainer>
-    </div>
-  );
-};
+// --- End of Modal ---
 
 // --- MAIN ANALYTICS PAGE COMPONENT ---
 const AnalyticsPage: React.FC = () => {
+  // State for Summary data
   const [analyticsData, setAnalyticsData] = useState<AnalyticsSummary | null>(
     null
   );
-  const [loading, setLoading] = useState(true);
+  const [summaryLoading, setSummaryLoading] = useState(true);
 
-  // --- [NEW] State to track download status ---
+  // State for Revenue data
+  const [revenueData, setRevenueData] = useState<RevenueDataPoint[]>([]);
+  const [revenueLoading, setRevenueLoading] = useState(true);
+  const [revenueError, setRevenueError] = useState<string | null>(null);
+
+  // State for Download Report
   const [hasDownloaded, setHasDownloaded] = useState(false);
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
 
+  // Fetch Summary Data
   useEffect(() => {
     const fetchAnalytics = async () => {
+      setSummaryLoading(true);
       try {
         const response = await getDashboardSummary();
         setAnalyticsData(response.data);
       } catch (error) {
-        console.error("Failed to fetch analytics data:", error);
+        console.error("Failed to fetch analytics summary:", error);
       } finally {
-        setLoading(false);
+        setSummaryLoading(false);
       }
     };
     fetchAnalytics();
   }, []);
 
-  // --- [NEW] useEffect to reset download status when data changes ---
+  // Fetch Revenue Data
   useEffect(() => {
-    // Jab bhi analyticsData badle (matlab report nayi hai),
-    // download status ko reset kar dein.
+    const fetchRevenue = async () => {
+      setRevenueLoading(true);
+      setRevenueError(null);
+      try {
+        const response = await getRevenueOverTime(30);
+        const sortedData = response.data.data.sort(
+          (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+        );
+        setRevenueData(sortedData);
+      } catch (error) {
+        console.error("Failed to fetch revenue data:", error);
+        setRevenueError("Could not load revenue chart data.");
+      } finally {
+        setRevenueLoading(false);
+      }
+    };
+    fetchRevenue();
+  }, []);
+
+  // Reset download status
+  useEffect(() => {
     if (analyticsData) {
       setHasDownloaded(false);
     }
   }, [analyticsData]);
 
-  // --- [NEW] Logic for performing the download ---
+  // Download Report Logic (Poora code)
   const performDownload = () => {
     if (!analyticsData) return;
 
-    const escapeCsv = (str: string) => `"${str.replace(/"/g, '""')}"`;
+    const escapeCsv = (str: string | undefined | null): string => {
+      if (str === undefined || str === null) return '""';
+      const s = String(str);
+      return `"${s.replace(/"/g, '""')}"`;
+    };
 
-    let csvContent = "Top Selling Products\n";
+    let csvContent = "KPI Summary\n";
+    csvContent += "Metric,Value\n";
+    analyticsData.kpi_cards.forEach((card) => {
+      csvContent += `${escapeCsv(card.title)},${escapeCsv(card.value)}\n`;
+    });
+    csvContent += "\n";
+
+    csvContent += "Top Selling Products\n";
     csvContent += "Product Name,Units Sold\n";
     analyticsData.top_selling_products.forEach((product) => {
       csvContent += `${escapeCsv(product.name)},${product.value}\n`;
     });
     csvContent += "\n";
+
     csvContent += "Delivery Status\n";
     csvContent += "Status,Count\n";
     csvContent += `On-Time,${analyticsData.delivery_status.on_time}\n`;
@@ -203,25 +157,26 @@ const AnalyticsPage: React.FC = () => {
     const link = document.createElement("a");
     const date = new Date().toISOString().split("T")[0];
     link.setAttribute("href", url);
-    link.setAttribute("download", `analytics-report-${date}.csv`);
+    link.setAttribute("download", `analytics-summary-report-${date}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    URL.revokeObjectURL(url);
 
-    setHasDownloaded(true); // Mark as downloaded
-    setIsConfirmModalOpen(false); // Close modal if it was open
+    setHasDownloaded(true);
+    setIsConfirmModalOpen(false);
   };
 
-  // --- [UPDATED] Main download button handler ---
   const handleDownloadReport = () => {
     if (hasDownloaded) {
-      // Agar pehle se download ho chuki hai, to confirmation poochein
       setIsConfirmModalOpen(true);
     } else {
-      // Varna seedha download karein
       performDownload();
     }
   };
+
+  // Determine overall loading state
+  const isLoading = summaryLoading || revenueLoading;
 
   return (
     <>
@@ -234,6 +189,7 @@ const AnalyticsPage: React.FC = () => {
       />
 
       <div className="flex flex-col gap-6">
+        {/* Header and Download Button */}
         <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
           <div>
             <h1 className="text-3xl font-bold text-white">
@@ -245,45 +201,144 @@ const AnalyticsPage: React.FC = () => {
           </div>
           <button
             onClick={handleDownloadReport}
-            disabled={!analyticsData || loading}
+            disabled={!analyticsData || summaryLoading}
             className="w-full sm:w-auto flex items-center justify-center gap-2 bg-zinc-800 hover:bg-zinc-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors border border-zinc-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Download size={16} />
-            <span>Download Report</span>
+            <span>Download Summary</span>
           </button>
         </div>
 
-        {loading ? (
+        {/* Loading State */}
+        {isLoading ? (
           <div className="flex justify-center items-center h-64">
+            <svg
+              className="animate-spin -ml-1 mr-3 h-10 w-10 text-cyan-500"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                className="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                strokeWidth="4"
+              ></circle>
+              <path
+                className="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+              ></path>
+            </svg>
             <p className="text-zinc-400">Loading analytics...</p>
           </div>
-        ) : analyticsData ? (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="bg-zinc-900 rounded-lg shadow-lg p-6">
-              <h2 className="text-xl font-semibold text-white mb-4">
-                Top Selling Products
-              </h2>
-              <TopProductsChart data={analyticsData.top_selling_products} />
-            </div>
-            <div className="bg-zinc-900 rounded-lg shadow-lg p-6">
-              <h2 className="text-xl font-semibold text-white mb-4">
-                On-Time vs. Delayed Deliveries
-              </h2>
-              <DeliveryPieChart data={analyticsData.delivery_status} />
-            </div>
-            <div className="bg-zinc-900 rounded-lg shadow-lg p-6 lg:col-span-2">
-              <h2 className="text-xl font-semibold text-white mb-4">
-                Demand Forecast (AI - Coming Soon)
-              </h2>
-              <div className="h-[300px] flex items-center justify-center text-zinc-500">
-                AI-powered demand forecast chart will be displayed here.
-              </div>
+        ) : // Error State
+        !analyticsData && !summaryLoading ? (
+          <div className="flex justify-center items-center h-64 bg-zinc-900 rounded-lg p-6">
+            <div className="text-center">
+              <AlertTriangle className="mx-auto h-12 w-12 text-red-500" />
+              <p className="mt-4 text-lg font-semibold text-red-400">
+                Could not load summary data.
+              </p>
+              <p className="text-zinc-400 text-sm">
+                Please try refreshing the page.
+              </p>
             </div>
           </div>
         ) : (
-          <div className="flex justify-center items-center h-64">
-            <p className="text-red-400">Could not load analytics data.</p>
-          </div>
+          // --- Refactored Content Grid ---
+          analyticsData && (
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+              {/* KPI Cards */}
+              {analyticsData.kpi_cards && analyticsData.kpi_cards.length > 0 ? (
+                <KpiCardGrid kpi_cards={analyticsData.kpi_cards} />
+              ) : (
+                <div className="bg-zinc-900 rounded-lg shadow-lg p-4 border border-zinc-800 md:col-span-2 xl:col-span-3 text-center text-zinc-500">
+                  KPI Cards data is unavailable.
+                </div>
+              )}
+
+              {/* Top Selling Products */}
+              <div className="bg-zinc-900 rounded-lg shadow-lg p-6 border border-zinc-800">
+                <h2 className="text-xl font-semibold text-white mb-4">
+                  Top Selling Products
+                </h2>
+                <TopProductsChart data={analyticsData.top_selling_products} />
+              </div>
+
+              {/* Delivery Status */}
+              <div className="bg-zinc-900 rounded-lg shadow-lg p-6 border border-zinc-800">
+                <h2 className="text-xl font-semibold text-white mb-4">
+                  Delivery Status
+                </h2>
+                <DeliveryPieChart data={analyticsData.delivery_status} />
+              </div>
+
+              {/* Order Status Breakdown */}
+              <div className="bg-zinc-900 rounded-lg shadow-lg p-6 border border-zinc-800">
+                <h2 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
+                  <ListChecks size={20} className="text-amber-400" />
+                  Order Status Breakdown
+                </h2>
+                {analyticsData.order_status_breakdown &&
+                analyticsData.order_status_breakdown.length > 0 ? (
+                  <OrderStatusChart
+                    data={analyticsData.order_status_breakdown}
+                  />
+                ) : (
+                  <div className="h-[300px] flex items-center justify-center text-zinc-500">
+                    No order status data available.
+                  </div>
+                )}
+              </div>
+
+              {/* Revenue Chart */}
+              <div className="bg-zinc-900 rounded-lg shadow-lg p-6 md:col-span-2 xl:col-span-3 border border-zinc-800">
+                <h2 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
+                  <TrendingUp size={20} className="text-cyan-400" />
+                  Revenue Over Last 30 Days
+                </h2>
+                {revenueLoading ? (
+                  <div className="h-[300px] flex items-center justify-center text-zinc-500">
+                    <svg
+                      className="animate-spin h-8 w-8 text-cyan-500"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
+                    </svg>
+                    <span className="ml-3">Loading chart data...</span>
+                  </div>
+                ) : revenueError ? (
+                  <div className="h-[300px] flex flex-col items-center justify-center text-red-400 bg-red-900/10 rounded-md p-4">
+                    <AlertTriangle className="w-8 h-8 mb-2" />
+                    <p className="font-semibold">{revenueError}</p>
+                  </div>
+                ) : revenueData.length > 0 ? (
+                  <RevenueChart data={revenueData} />
+                ) : (
+                  <div className="h-[300px] flex items-center justify-center text-zinc-500 bg-zinc-800/50 rounded-md">
+                    No revenue data available for this period.
+                  </div>
+                )}
+              </div>
+            </div>
+          )
         )}
       </div>
     </>

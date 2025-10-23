@@ -207,7 +207,7 @@ export interface AppSettingsUpdate {
 export interface KpiCard {
   title: string;
   value: string;
-  change: string;
+  change?: string;
 }
 export interface TopProduct {
   name: string;
@@ -217,8 +217,16 @@ export interface DeliveryStatusChart {
   on_time: number;
   delayed: number;
 }
+export interface OrderStatusBreakdownItem {
+  status: string; // e.g., "Pending", "Delivered"
+  value: number; // Count for that status
+}
+
+// --- MODIFY THE EXISTING AnalyticsSummary TYPE ---
 export interface AnalyticsSummary {
-  kpi_cards: KpiCard[];
-  top_selling_products: TopProduct[];
-  delivery_status: DeliveryStatusChart;
+  kpi_cards: { title: string; value: string; change?: string }[];
+  top_selling_products: { name: string; value: number }[];
+  delivery_status: { on_time: number; delayed: number };
+  // --- ADD THIS NEW FIELD ---
+  order_status_breakdown: OrderStatusBreakdownItem[]; // Add this line
 }
