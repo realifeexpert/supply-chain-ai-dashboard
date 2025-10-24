@@ -39,6 +39,7 @@ const KPICard: React.FC<KPICardProps> = ({
   icon: Icon,
   change,
 }) => (
+  // --- FIX 1: Removed min-h-[108px] ---
   <div className="bg-zinc-900 rounded-lg shadow-lg p-5 flex flex-col justify-between border border-zinc-800">
     {" "}
     {/* Added border */}
@@ -49,8 +50,8 @@ const KPICard: React.FC<KPICardProps> = ({
       {/* Added flex-shrink-0 */}
     </div>
     <div>
-      <p className="text-3xl font-bold text-white truncate">{value}</p>{" "}
-      {/* Added truncate */}
+      {/* --- FIX 2: Removed break-words (and no truncate) --- */}
+      <p className="text-3xl font-bold text-white">{value}</p>{" "}
       {change && (
         <p
           className={`text-xs mt-1 ${
@@ -135,7 +136,7 @@ const DashboardPage: React.FC = () => {
 
       {/* KPI Cards Section */}
       {summaryLoading ? (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {/* Simple Skeleton Loaders for KPIs */}
           {[...Array(6)].map((_, i) => (
             <div
@@ -152,8 +153,10 @@ const DashboardPage: React.FC = () => {
           {summaryError}
         </p>
       ) : summaryData?.kpi_cards ? (
-        // --- CHANGE 4: Use xl:grid-cols-6 for potentially 6 cards ---
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6">
+        // --- THIS IS THE FIX: Changed grid layout for more space ---
+        // Was: grid gap-4 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6
+        // Now: grid gap-4 md:grid-cols-2 lg:grid-cols-3
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {summaryData.kpi_cards.map((card: KpiCard) => (
             <KPICard
               key={card.title}

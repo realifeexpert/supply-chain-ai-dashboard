@@ -112,12 +112,24 @@ const DashboardLayout: React.FC = () => {
   const [isSidebarExpanded, setIsSidebarExpanded] = useState(true);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+  // --- CHANGE 1: "Refresh Signal" ke liye naya state ---
+  // Yeh ek simple counter hai. Jab bhi settings save hongi, hum is number ko badal denge.
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  // --- CHANGE 2: Naya function jo settings save hone par call hoga ---
+  const handleSettingsSave = () => {
+    setIsSettingsModalOpen(false); // Modal ko band karein
+    setRefreshKey((prevKey) => prevKey + 1); // Refresh signal ko trigger karein
+  };
 
   return (
     <>
+      {/* --- CHANGE 3: SettingsModal ko naya prop pass karein --- */}
       <SettingsModal
         isOpen={isSettingsModalOpen}
         onClose={() => setIsSettingsModalOpen(false)}
+        // Jab modal save hoga, to hamara naya function call hoga
+        onSettingsSave={handleSettingsSave}
       />
 
       <div
@@ -191,8 +203,9 @@ const DashboardLayout: React.FC = () => {
               <Settings className="h-5 w-5 text-zinc-400" />
             </button>
           </header>
+          {/* --- FIX: Removed the duplicate <Outlet /> --- */}
           <main className="flex-1 p-4 sm:p-6 bg-zinc-950 overflow-auto">
-            <Outlet />
+            <Outlet context={{ refreshKey }} />
           </main>
         </div>
         <MobileSidebar

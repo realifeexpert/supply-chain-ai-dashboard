@@ -6,6 +6,7 @@ import { getSettings, updateSettings } from "@/services/api";
 interface SettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onSettingsSave: () => void; // Yeh naya prop hai
 }
 
 // Setting key ko behtar format mein dikhane ke liye helper function
@@ -19,6 +20,7 @@ const formatSettingKey = (key: string) => {
 export const SettingsModal: React.FC<SettingsModalProps> = ({
   isOpen,
   onClose,
+  onSettingsSave, // --- CHANGE 2: Naye prop ko yahan receive karein ---
 }) => {
   const [settings, setSettings] = useState<AppSetting[]>([]);
   const [loading, setLoading] = useState(false);
@@ -60,8 +62,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     setError(null);
     try {
       await updateSettings({ settings });
-      onClose(); // Safal hone par modal band kar dein
-    } catch (err) {
+      onSettingsSave(); // Yeh parent ko signal bhejega    } catch (err) {
       setError("Failed to save settings.");
     } finally {
       setLoading(false);
