@@ -7,17 +7,6 @@ from ..models import models
 
 router = APIRouter()
 
-def _update_product_status(product: models.Product):
-    """Updates the product's status based on its stock quantity."""
-    LOW_STOCK_THRESHOLD = 10
-
-    if product.stock_quantity <= 0:
-        product.stock_quantity = 0
-        product.status = models.StockStatus.Out_of_Stock
-    elif product.stock_quantity <= LOW_STOCK_THRESHOLD:
-        product.status = models.StockStatus.Low_Stock
-    else:
-        product.status = models.StockStatus.In_Stock
 
 @router.get("/", response_model=List[schemas.Order])
 def get_all_orders(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
@@ -120,7 +109,6 @@ def create_order(order: schemas.OrderCreate, db: Session = Depends(get_db)):
         db_order.items.append(order_item)
         
         product_obj.stock_quantity -= quantity
-        _update_product_status(product_obj)
 
     # Step 7: Commit the transaction
     db.add(db_order)
@@ -150,7 +138,6 @@ def update_order(order_id: int, order_update: schemas.OrderUpdate, db: Session =
     if new_status in restock_statuses and original_status not in restock_statuses:
         for item in db_order.items:
             item.product.stock_quantity += item.quantity
-            _update_product_status(item.product)
     
     elif original_status in restock_statuses and new_status not in restock_statuses:
         for item in db_order.items:
@@ -160,7 +147,6 @@ def update_order(order_id: int, order_update: schemas.OrderUpdate, db: Session =
                     detail=f"Cannot reverse return for {item.product.name}. Not enough stock available."
                 )
             item.product.stock_quantity -= item.quantity
-            _update_product_status(item.product)
 
     db.add(db_order)
     db.commit()

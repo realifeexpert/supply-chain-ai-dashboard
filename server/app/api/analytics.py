@@ -11,6 +11,8 @@ import random
 from datetime import datetime, timedelta, date
 from calendar import month_abbr 
 
+from ..utils.settings_helpers import get_low_stock_threshold
+
 router = APIRouter()
 
 # --- RevenueOverTime Schemas (No change) ---
@@ -38,18 +40,6 @@ class LowStockProduct(BaseModel):
 
 class LowStockProductResponse(BaseModel):
     data: List[LowStockProduct]
-
-
-# --- (NEW) HELPER FUNCTION ---
-# Settings se 'Low Stock Threshold' fetch karne ke liye
-def get_low_stock_threshold(db: Session) -> int:
-    setting = db.query(models.AppSettings).filter(
-        models.AppSettings.setting_key == "LOW_STOCK_THRESHOLD"
-    ).first()
-    if setting and setting.setting_value.isdigit():
-        return int(setting.setting_value)
-    return 10  # Default value 10 agar setting na mile
-
 
 # --- /summary endpoint (UPDATED) ---
 @router.get("/summary", response_model=schemas.AnalyticsSummary)

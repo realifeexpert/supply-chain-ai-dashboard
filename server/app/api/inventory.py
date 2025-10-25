@@ -4,27 +4,9 @@ from typing import List
 from ..database import get_db
 from ..schemas import schemas
 from ..models import models
+from ..utils.settings_helpers import get_low_stock_threshold, get_product_status
 
 router = APIRouter()
-
-# --- NAYE HELPER FUNCTIONS ---
-# Settings se 'Low Stock Threshold' fetch karne ke liye
-def get_low_stock_threshold(db: Session) -> int:
-    setting = db.query(models.AppSettings).filter(
-        models.AppSettings.setting_key == "LOW_STOCK_THRESHOLD"
-    ).first()
-    if setting and setting.setting_value.isdigit():
-        return int(setting.setting_value)
-    return 10  # Default value 10
-
-# Product status ko automatically set karne ke liye
-def get_product_status(stock_quantity: int, low_stock_threshold: int) -> schemas.StockStatus:
-    if stock_quantity <= 0:
-        return schemas.StockStatus.Out_of_Stock
-    elif stock_quantity <= low_stock_threshold:
-        return schemas.StockStatus.Low_Stock
-    else:
-        return schemas.StockStatus.In_Stock
 
 # --- YAHAN BADLAAV KIYA GAYA HAI ---
 @router.get("/products", response_model=List[schemas.Product])
