@@ -15,6 +15,9 @@ from .api.customer import orders as customer_orders
 
 from .api import auth
 
+from app.api.customer import address as customer_address_router
+
+
 
 
 # Create all database tables (if they don't exist) on app startup
@@ -62,6 +65,11 @@ app.include_router(customer_catalog.router, prefix="/api/customer", tags=["Custo
 app.include_router(customer_orders.router, prefix="/api/customer/orders", tags=["Customer Orders"])
 
 app.include_router(auth.router, prefix="/api/auth", tags=["Authentication"])
+app.include_router(
+    customer_address_router.router,
+    prefix="/api/customer/address",
+    tags=["Customer Address"]
+)
 
 # Include the refactored bulk routers. Their prefixes are defined in their own files
 # (e.g., /bulk/inventory), so we just add the /api prefix here.

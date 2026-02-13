@@ -65,16 +65,37 @@ export interface OrderItemCreate {
   quantity: number;
 }
 
+// --- ADDRESS INTERFACE ---
+
+export interface Address {
+  id: number;
+  full_name: string;
+  phone_number: string;
+  flat: string;
+  area: string;
+  landmark?: string;
+  city: string;
+  state: string;
+  pincode: string;
+  country?: string;
+}
+
 /**
  * The main Order object structure as received from the API.
  */
 export interface Order {
   id: number;
   order_date: string;
+
   customer_name: string;
-  customer_email: string;
+  customer_email?: string;
   phone_number?: string;
+
   shipping_address: string;
+
+  // NEW — Address object from backend
+  address?: Address;
+
   // Financial fields calculated by the backend
   subtotal: number;
   discount_value?: number;
@@ -82,14 +103,18 @@ export interface Order {
   total_gst: number;
   shipping_charges?: number;
   total_amount: number;
+
   // Legacy amount field (may be deprecated)
-  amount: number;
+  amount?: number;
+
   payment_status: PaymentStatus;
   payment_method: PaymentMethod;
   status: OrderStatus;
+
   shipping_provider?: ShippingProvider;
   tracking_id?: string;
   vehicle_id?: number;
+
   items: ItemInOrder[];
 }
 

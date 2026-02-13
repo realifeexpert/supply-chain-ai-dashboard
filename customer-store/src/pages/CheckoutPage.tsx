@@ -3,23 +3,25 @@ import { useCartStore } from "@/store/useCartStore";
 import { Navbar } from "@/components/common/Navbar";
 import { useNavigate } from "react-router-dom";
 import { placeOrder } from "@/services/api";
+import { AddressSelector } from "@/components/checkout/AddressSelector";
 
 export const CheckoutPage: React.FC = () => {
   const { items, getTotalPrice, clearCart } = useCartStore();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
 
-  const [customer, setCustomer] = useState({
-    name: "",
-    email: "",
-    address: "",
-    phone: "",
-  });
+  // Selected Address from AddressSelector
+  const [selectedAddress, setSelectedAddress] = useState<any>(null);
 
   const hasOutOfStock = items.some((item) => item.stock_quantity <= 0);
 
   const handlePlaceOrder = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!selectedAddress) {
+      alert("Please select or add a delivery address.");
+      return;
+    }
 
     if (hasOutOfStock) {
       alert("Some items are out of stock. Please adjust your cart.");
@@ -28,13 +30,16 @@ export const CheckoutPage: React.FC = () => {
 
     setLoading(true);
 
+    // ✅ MATCHES BACKEND OrderCreate SCHEMA
     const orderPayload = {
-      customer_name: customer.name,
-      customer_email: customer.email,
-      phone_number: customer.phone,
-      shipping_address: customer.address,
+      address_id: selectedAddress.id, // REQUIRED
+
       payment_method: "COD",
-      payment_status: "Pending",
+
+      discount_value: 0,
+      discount_type: "fixed",
+      shipping_charges: 0,
+
       items: items.map((item) => ({
         product_id: item.id,
         quantity: item.quantity,
@@ -49,7 +54,7 @@ export const CheckoutPage: React.FC = () => {
       navigate("/");
     } catch (error) {
       console.error("Order failed:", error);
-      alert("Failed to place order. Stock may have changed.");
+      alert("Failed to place order.");
     } finally {
       setLoading(false);
     }
@@ -60,88 +65,34 @@ export const CheckoutPage: React.FC = () => {
       <Navbar />
 
       <main className="container mx-auto px-4 py-12 flex flex-col lg:flex-row gap-12">
-        {/* LEFT: SHIPPING FORM */}
+        {/* LEFT — ADDRESS SELECTION */}
         <div className="flex-1 space-y-8">
           <h2 className="text-2xl font-bold border-b border-zinc-800 pb-4">
-            Shipping Information
+            Select Delivery Address
           </h2>
 
-          <form onSubmit={handlePlaceOrder} className="grid grid-cols-1 gap-6">
-            {/* NAME */}
-            <div>
-              <label className="block text-sm text-zinc-400 mb-2">
-                Full Name
-              </label>
-              <input
-                required
-                className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-3 outline-none focus:ring-2 focus:ring-cyan-500"
-                onChange={(e) =>
-                  setCustomer({ ...customer, name: e.target.value })
-                }
-              />
-            </div>
+          <AddressSelector onSelect={setSelectedAddress} />
 
-            {/* EMAIL */}
-            <div>
-              <label className="block text-sm text-zinc-400 mb-2">Email</label>
-              <input
-                required
-                type="email"
-                className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-3 outline-none focus:ring-2 focus:ring-cyan-500"
-                onChange={(e) =>
-                  setCustomer({ ...customer, email: e.target.value })
-                }
-              />
-            </div>
-
-            {/* PHONE */}
-            <div>
-              <label className="block text-sm text-zinc-400 mb-2">Phone</label>
-              <input
-                required
-                className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-3 outline-none focus:ring-2 focus:ring-cyan-500"
-                onChange={(e) =>
-                  setCustomer({ ...customer, phone: e.target.value })
-                }
-              />
-            </div>
-
-            {/* ADDRESS */}
-            <div>
-              <label className="block text-sm text-zinc-400 mb-2">
-                Shipping Address
-              </label>
-              <textarea
-                required
-                rows={3}
-                className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-3 outline-none focus:ring-2 focus:ring-cyan-500"
-                onChange={(e) =>
-                  setCustomer({ ...customer, address: e.target.value })
-                }
-              />
-            </div>
-
-            {/* BUTTON */}
-            <button
-              type="submit"
-              disabled={loading || items.length === 0 || hasOutOfStock}
-              className={`w-full font-bold py-4 rounded-xl transition-all
-                ${
-                  hasOutOfStock
-                    ? "bg-zinc-700 text-zinc-400 cursor-not-allowed"
-                    : "bg-cyan-500 hover:bg-cyan-600 text-black"
-                }`}
-            >
-              {hasOutOfStock
-                ? "Some items out of stock"
-                : loading
-                  ? "Processing Order..."
-                  : `Confirm Order - ₹${getTotalPrice()}`}
-            </button>
-          </form>
+          <button
+            onClick={handlePlaceOrder}
+            disabled={
+              loading || items.length === 0 || hasOutOfStock || !selectedAddress
+            }
+            className={`w-full font-bold py-4 rounded-xl transition-all ${
+              hasOutOfStock
+                ? "bg-zinc-700 text-zinc-400 cursor-not-allowed"
+                : "bg-cyan-500 hover:bg-cyan-600 text-black"
+            }`}
+          >
+            {hasOutOfStock
+              ? "Some items out of stock"
+              : loading
+                ? "Processing Order..."
+                : `Confirm Order - ₹${getTotalPrice()}`}
+          </button>
         </div>
 
-        {/* RIGHT: ORDER SUMMARY */}
+        {/* RIGHT — ORDER SUMMARY */}
         <div className="w-full lg:w-96 bg-zinc-900/50 border border-zinc-800 rounded-2xl p-6 h-fit sticky top-24">
           <h3 className="text-xl font-bold mb-6">Order Summary</h3>
 
@@ -161,7 +112,6 @@ export const CheckoutPage: React.FC = () => {
                     <span className="text-cyan-400">₹{total}</span>
                   </div>
 
-                  {/* Stock Status */}
                   {isOut ? (
                     <p className="text-red-500 text-[11px]">Out of stock</p>
                   ) : isLow ? (

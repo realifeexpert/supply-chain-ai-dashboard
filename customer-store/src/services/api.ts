@@ -40,3 +40,20 @@ export const placeOrder = (orderData: any) =>
   apiClient.post("/customer/orders/place-order", orderData);
 
 export const getMyOrders = () => apiClient.get("/customer/orders/my-orders");
+
+// --- ADDRESS CALLS ---
+
+export const addAddress = (data: any) =>
+  apiClient.post("/customer/address", data);
+
+export const getMyAddresses = () =>
+  apiClient.get("/customer/address/my-addresses");
+
+export const createAddress = (data: any) =>
+  apiClient.post("/customer/address/add", data);
+
+export const updateAddress = (id: number, data: any) =>
+  apiClient.put(`/customer/address/update/${id}`, data);
+
+export const deleteAddress = (id: number) =>
+  apiClient.delete(`/customer/address/delete/${id}`);
