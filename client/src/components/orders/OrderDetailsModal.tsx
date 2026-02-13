@@ -74,7 +74,7 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
             <DetailItem
               icon={Mail}
               label="Customer Email"
-              value={order.customer_email}
+              value={order.user?.email}
             />
 
             {/* Phone */}

@@ -238,6 +238,8 @@ class Order(OrderBase):
     order_date: datetime
     address: Optional[Address]
     items: List[ItemInOrderResponse]
+    user: Optional[User]   # ADD THIS
+
     class Config:
         from_attributes = True
 

@@ -116,6 +116,7 @@ export interface Order {
   vehicle_id?: number;
 
   items: ItemInOrder[];
+  user?: User;
 }
 
 /**

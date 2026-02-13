@@ -17,8 +17,9 @@ def get_all_orders(skip: int = 0, limit: int = 100, db: Session = Depends(get_db
     orders = (
         db.query(models.Order)
         .options(
-            joinedload(models.Order.items)
-            .joinedload(models.OrderItem.product)
+            joinedload(models.Order.items).joinedload(models.OrderItem.product),
+            joinedload(models.Order.user),        # <-- ADD HERE
+            joinedload(models.Order.address) 
         )
         .order_by(models.Order.order_date.desc())
         .offset(skip)

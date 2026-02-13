@@ -20,7 +20,11 @@ async def get_my_orders(
 ):
     return (
         db.query(models.Order)
-        .options(joinedload(models.Order.items).joinedload(models.OrderItem.product))
+         .options(
+            joinedload(models.Order.items).joinedload(models.OrderItem.product),
+            joinedload(models.Order.user),
+            joinedload(models.Order.address)
+        )
         .filter(models.Order.user_id == current_user.id)
         .order_by(models.Order.order_date.desc())
         .all()
