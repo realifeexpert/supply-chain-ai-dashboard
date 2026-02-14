@@ -2,7 +2,7 @@ import { useEffect } from "react";
 
 export const useInventorySocket = (onUpdate: () => void) => {
   useEffect(() => {
-    const socket = new WebSocket("ws://localhost:8000/ws/inventory");
+    const socket = new WebSocket(import.meta.env.VITE_WS_URL);
 
     socket.onopen = () => {
       console.log("WebSocket Connected");
