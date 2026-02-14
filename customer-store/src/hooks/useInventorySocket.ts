@@ -2,7 +2,20 @@ import { useEffect } from "react";
 
 export const useInventorySocket = (onUpdate: () => void) => {
   useEffect(() => {
-    const socket = new WebSocket(import.meta.env.VITE_WS_URL);
+    // Get backend URL from ENV
+    const baseUrl = import.meta.env.VITE_BACKEND_URL;
+
+    if (!baseUrl) {
+      console.error("VITE_BACKEND_URL is missing in .env");
+      return;
+    }
+
+    // Convert http -> ws, https -> wss automatically
+    const wsUrl = `${baseUrl.replace(/^http/, "ws")}/ws/inventory`;
+
+    console.log("Connecting WebSocket to:", wsUrl);
+
+    const socket = new WebSocket(wsUrl);
 
     socket.onopen = () => {
       console.log("WebSocket Connected");
@@ -11,13 +24,13 @@ export const useInventorySocket = (onUpdate: () => void) => {
     socket.onmessage = (event) => {
       console.log("WS Message:", event.data);
 
-      // 🔥 Listen to BOTH events
+      // Listen to BOTH real-time events
       if (
         event.data === "inventory_updated" ||
         event.data === "order_updated"
       ) {
         console.log("Real-time update triggered");
-        onUpdate(); // Re-fetch orders automatically
+        onUpdate(); // Auto refresh data
       }
     };
 
@@ -29,6 +42,8 @@ export const useInventorySocket = (onUpdate: () => void) => {
       console.log("WebSocket Closed");
     };
 
-    return () => socket.close();
+    return () => {
+      socket.close();
+    };
   }, [onUpdate]);
 };
