@@ -2,7 +2,7 @@ from sqlalchemy import (
     Column, Integer, String, Float, DateTime, Enum, Boolean, ForeignKey, Text
 )
 from sqlalchemy.orm import relationship
-from ..database import Base 
+from ..database import Base
 import enum
 import datetime
 
@@ -82,13 +82,17 @@ class User(Base):
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, index=True)
-    email = Column(String, unique=True, index=True)
-    hashed_password = Column(String)
+
+    # Simplified Auth → Only email + password used
+    email = Column(String, unique=True, index=True, nullable=False)
+    hashed_password = Column(String, nullable=False)
+
     role = Column(Enum(UserRole, name="userrole"), default=UserRole.user)
     is_active = Column(Boolean, default=True)
 
-    phone_number = Column(String, unique=True, nullable=True)
+    # OLD fields kept but OPTIONAL (not used now)
+    name = Column(String, nullable=True)
+    phone_number = Column(String, nullable=True)
     address = Column(Text, nullable=True)
 
     email_verified = Column(Boolean, default=False)
@@ -96,7 +100,11 @@ class User(Base):
 
     # Relationships
     orders = relationship("Order", back_populates="user")
-    addresses = relationship("Address", back_populates="user", cascade="all, delete")
+    addresses = relationship(
+        "Address",
+        back_populates="user",
+        cascade="all, delete"
+    )
 
 
 class Address(Base):
@@ -119,8 +127,7 @@ class Address(Base):
 
     is_default = Column(Boolean, default=False)
 
-    user = relationship("User")
-
+    user = relationship("User", back_populates="addresses")
 
 
 class Product(Base):
@@ -154,19 +161,19 @@ class Order(Base):
     id = Column(Integer, primary_key=True, index=True)
     order_date = Column(DateTime, default=datetime.datetime.utcnow)
 
-    # Link to user
+    # User link
     user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     user = relationship("User", back_populates="orders")
 
-    # NEW: Link to saved address
+    # Address link
     address_id = Column(Integer, ForeignKey("addresses.id"), nullable=True)
     address = relationship("Address")
 
-    # --- OLD FIELDS (kept for backward compatibility) ---
-    customer_name = Column(String, index=True)
-    customer_email = Column(String, index=True)
+    # Legacy fields (still used by UI)
+    customer_name = Column(String, index=True, nullable=True)
+    customer_email = Column(String, index=True, nullable=True)
     phone_number = Column(String, nullable=True)
-    shipping_address = Column(String)
+    shipping_address = Column(String, nullable=True)
 
     # Financial
     subtotal = Column(Float)

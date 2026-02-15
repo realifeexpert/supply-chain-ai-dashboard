@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { signupUser, loginUser } from "@/services/api";
-import { User, Mail, Lock, Phone, MapPin, ArrowRight } from "lucide-react";
+import { Mail, Lock, ArrowRight } from "lucide-react";
 
 export const AuthPage: React.FC = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -9,34 +9,39 @@ export const AuthPage: React.FC = () => {
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
-    name: "",
     email: "",
     password: "",
-    phone_number: "",
-    address: "",
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+
     try {
       if (isLogin) {
-        // Handle Login
+        // LOGIN (OAuth2 form format required by FastAPI)
         const loginPayload = new FormData();
         loginPayload.append("username", formData.email);
         loginPayload.append("password", formData.password);
+
         const res = await loginUser(loginPayload);
+
         localStorage.setItem("token", res.data.access_token);
         localStorage.setItem("user", JSON.stringify(res.data.user));
       } else {
-        // Handle Signup with Full Details
-        await signupUser(formData);
-        alert("Account created! Please login.");
+        // SIGNUP (JSON)
+        await signupUser({
+          email: formData.email,
+          password: formData.password,
+        });
+
+        alert("Account created successfully. Please login.");
         setIsLogin(true);
         setLoading(false);
         return;
       }
-      navigate(-1); // Go back to the page they were on (like Checkout)
+
+      navigate(-1);
     } catch (err: any) {
       alert(err.response?.data?.detail || "Authentication failed");
     } finally {
@@ -53,28 +58,15 @@ export const AuthPage: React.FC = () => {
         <h2 className="text-3xl font-bold text-white mb-2">
           {isLogin ? "Welcome Back" : "Create Account"}
         </h2>
+
         <p className="text-zinc-500 text-sm mb-8">
           {isLogin
-            ? "Login to access your orders"
-            : "Join us for a professional shopping experience"}
+            ? "Login to continue"
+            : "Create account using Email & Password"}
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {!isLogin && (
-            <div className="relative">
-              <User className="absolute left-3 top-3.5 h-4 w-4 text-zinc-500" />
-              <input
-                type="text"
-                placeholder="Full Name"
-                required
-                className={inputClass}
-                onChange={(e) =>
-                  setFormData({ ...formData, name: e.target.value })
-                }
-              />
-            </div>
-          )}
-
+          {/* EMAIL */}
           <div className="relative">
             <Mail className="absolute left-3 top-3.5 h-4 w-4 text-zinc-500" />
             <input
@@ -88,34 +80,7 @@ export const AuthPage: React.FC = () => {
             />
           </div>
 
-          {!isLogin && (
-            <>
-              <div className="relative">
-                <Phone className="absolute left-3 top-3.5 h-4 w-4 text-zinc-500" />
-                <input
-                  type="text"
-                  placeholder="Phone Number"
-                  required
-                  className={inputClass}
-                  onChange={(e) =>
-                    setFormData({ ...formData, phone_number: e.target.value })
-                  }
-                />
-              </div>
-              <div className="relative">
-                <MapPin className="absolute left-3 top-3.5 h-4 w-4 text-zinc-500" />
-                <textarea
-                  placeholder="Shipping Address"
-                  required
-                  className={`${inputClass} pl-10 h-20 resize-none`}
-                  onChange={(e) =>
-                    setFormData({ ...formData, address: e.target.value })
-                  }
-                />
-              </div>
-            </>
-          )}
-
+          {/* PASSWORD */}
           <div className="relative">
             <Lock className="absolute left-3 top-3.5 h-4 w-4 text-zinc-500" />
             <input
@@ -129,6 +94,7 @@ export const AuthPage: React.FC = () => {
             />
           </div>
 
+          {/* BUTTON */}
           <button
             type="submit"
             disabled={loading}

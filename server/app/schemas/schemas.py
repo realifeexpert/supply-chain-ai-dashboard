@@ -1,4 +1,4 @@
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, validator, EmailStr
 from typing import Optional, List
 from datetime import datetime
 from enum import Enum
@@ -56,8 +56,6 @@ class MediaType(str, Enum):
 
 # ---------------- ADDRESS SCHEMAS ---------------- #
 
-# ADDRESS SCHEMAS
-
 class AddressBase(BaseModel):
     full_name: str
     phone_number: str
@@ -82,13 +80,13 @@ class Address(AddressBase):
         from_attributes = True
 
 
-
 # ---------------- PRODUCT SCHEMAS ---------------- #
 
 class ProductImageResponse(BaseModel):
     id: int
     media_url: str
     media_type: MediaType
+
     class Config:
         from_attributes = True
 
@@ -134,27 +132,30 @@ class Product(ProductBase):
     id: int
     images: List[ProductImageResponse] = []
     status: StockStatus
+
     class Config:
         from_attributes = True
 
 
-# ---------------- USER SCHEMAS ---------------- #
+# ---------------- USER SCHEMAS (SIMPLIFIED) ---------------- #
 
 class UserBase(BaseModel):
-    name: str
-    email: str
+    email: EmailStr
     role: UserRole = UserRole.user
 
 
-class UserCreate(UserBase):
+class UserCreate(BaseModel):
+    email: EmailStr
     password: str
-    phone_number: str
-    address: str
+
+
+class UserLogin(BaseModel):
+    email: EmailStr
+    password: str
 
 
 class UserUpdate(BaseModel):
-    name: Optional[str] = None
-    email: Optional[str] = None
+    email: Optional[EmailStr] = None
     role: Optional[UserRole] = None
     is_active: Optional[bool] = None
 
@@ -162,6 +163,7 @@ class UserUpdate(BaseModel):
 class User(UserBase):
     id: int
     is_active: bool
+
     class Config:
         from_attributes = True
 
@@ -178,6 +180,7 @@ class ItemProductDetailWithPrice(BaseModel):
     sku: str
     selling_price: float
     gst_rate: float
+
     class Config:
         from_attributes = True
 
@@ -185,6 +188,7 @@ class ItemProductDetailWithPrice(BaseModel):
 class ItemInOrderResponse(BaseModel):
     quantity: int
     product: ItemProductDetailWithPrice
+
     class Config:
         from_attributes = True
 
@@ -208,14 +212,11 @@ class OrderBase(BaseModel):
 
 
 class OrderCreate(BaseModel):
-    # IMPORTANT: Now using saved address instead of manual address
     address_id: int
     payment_method: PaymentMethod
-
     discount_value: Optional[float] = 0.0
     discount_type: Optional[DiscountType] = None
     shipping_charges: Optional[float] = 0.0
-
     items: List[OrderItemCreate]
 
 
@@ -238,7 +239,7 @@ class Order(OrderBase):
     order_date: datetime
     address: Optional[Address]
     items: List[ItemInOrderResponse]
-    user: Optional[User]   # ADD THIS
+    user: Optional[User]
 
     class Config:
         from_attributes = True
@@ -259,6 +260,7 @@ class VehicleBase(BaseModel):
 
 class Vehicle(VehicleBase):
     id: int
+
     class Config:
         from_attributes = True
 
@@ -268,6 +270,7 @@ class Vehicle(VehicleBase):
 class AppSetting(BaseModel):
     setting_key: str
     setting_value: str
+
     class Config:
         from_attributes = True
 
@@ -304,6 +307,7 @@ class AnalyticsSummary(BaseModel):
     top_selling_products: List[TopProduct]
     delivery_status: DeliveryStatusChart
     order_status_breakdown: List[OrderStatusBreakdownItem]
+
     class Config:
         from_attributes = True
 

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status 
+from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 from jose import jwt, JWTError
@@ -13,23 +13,23 @@ router = APIRouter()
 
 
 # =========================
-# SIGNUP
+# SIGNUP (Email + Password only)
 # =========================
 @router.post("/signup", response_model=schemas.User)
 def signup(user_in: schemas.UserCreate, db: Session = Depends(get_db)):
-    """Registers a new user with full profile details."""
+    """
+    Simple signup → Only Email + Password required.
+    """
 
-    # Check if user already exists
-    user = db.query(models.User).filter(models.User.email == user_in.email).first()
-    if user:
-        raise HTTPException(status_code=400, detail="User with this email already exists")
+    existing_user = db.query(models.User).filter(
+        models.User.email == user_in.email
+    ).first()
 
-    # Create new user
+    if existing_user:
+        raise HTTPException(status_code=400, detail="Email already registered")
+
     new_user = models.User(
-        name=user_in.name,
         email=user_in.email,
-        phone_number=user_in.phone_number,
-        address=user_in.address,
         hashed_password=security.hash_password(user_in.password),
         role="user"
     )
@@ -49,19 +49,27 @@ def login(
     db: Session = Depends(get_db),
     form_data: OAuth2PasswordRequestForm = Depends()
 ):
-    """Authenticates a user and returns a JWT token."""
+    """
+    Login using Email + Password
+    """
 
-    user = db.query(models.User).filter(models.User.email == form_data.username).first()
+    user = db.query(models.User).filter(
+        models.User.email == form_data.username
+    ).first()
 
-    if not user or not security.verify_password(form_data.password, user.hashed_password):
-        raise HTTPException(status_code=400, detail="Incorrect email or password")
+    if not user:
+        raise HTTPException(status_code=400, detail="Invalid email or password")
+
+    if not security.verify_password(form_data.password, user.hashed_password):
+        raise HTTPException(status_code=400, detail="Invalid email or password")
+
+    access_token = security.create_access_token(user.id)
 
     return {
-        "access_token": security.create_access_token(user.id),
+        "access_token": access_token,
         "token_type": "bearer",
         "user": {
             "id": user.id,
-            "name": user.name,
             "email": user.email,
             "role": user.role
         }
@@ -69,10 +77,10 @@ def login(
 
 
 # =========================
-# AUTH DEPENDENCY (GET CURRENT USER)
+# AUTH DEPENDENCY
 # =========================
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/auth/login")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 
 
 async def get_current_user(
@@ -80,8 +88,7 @@ async def get_current_user(
     token: str = Depends(oauth2_scheme)
 ):
     """
-    Extracts and validates JWT token, returns current authenticated user.
-    Use this in protected routes.
+    Extract user from JWT token
     """
 
     credentials_exception = HTTPException(
@@ -91,13 +98,18 @@ async def get_current_user(
 
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        user_id: str = payload.get("sub")
+        user_id = payload.get("sub")
+
         if user_id is None:
             raise credentials_exception
+
     except JWTError:
         raise credentials_exception
 
-    user = db.query(models.User).filter(models.User.id == int(user_id)).first()
+    user = db.query(models.User).filter(
+        models.User.id == int(user_id)
+    ).first()
+
     if user is None:
         raise credentials_exception
 
