@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { signupUser, loginUser } from "@/services/api";
-import { Mail, Lock, ArrowRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 
 export const AuthPage: React.FC = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -19,7 +19,6 @@ export const AuthPage: React.FC = () => {
 
     try {
       if (isLogin) {
-        // LOGIN (OAuth2 form format required by FastAPI)
         const loginPayload = new FormData();
         loginPayload.append("username", formData.email);
         loginPayload.append("password", formData.password);
@@ -29,7 +28,6 @@ export const AuthPage: React.FC = () => {
         localStorage.setItem("token", res.data.access_token);
         localStorage.setItem("user", JSON.stringify(res.data.user));
       } else {
-        // SIGNUP (JSON)
         await signupUser({
           email: formData.email,
           password: formData.password,
@@ -50,28 +48,29 @@ export const AuthPage: React.FC = () => {
   };
 
   const inputClass =
-    "w-full bg-zinc-900 border border-zinc-800 rounded-lg pl-10 pr-4 py-3 text-sm focus:ring-2 focus:ring-cyan-500 outline-none transition-all";
+    "w-full bg-white border border-transparent rounded-xl px-4 py-3 text-sm text-zinc-950 placeholder:text-zinc-400 focus:ring-4 focus:ring-yellow-500/30 outline-none transition-all";
+
+  const labelClass =
+    "block text-[11px] font-black uppercase tracking-widest text-white mb-2 ml-1";
 
   return (
-    <div className="min-h-screen bg-zinc-950 flex items-center justify-center p-4">
-      <div className="w-full max-w-md bg-zinc-900/50 border border-zinc-800 rounded-2xl p-8 backdrop-blur-xl">
-        <h2 className="text-3xl font-bold text-white mb-2">
-          {isLogin ? "Welcome Back" : "Create Account"}
-        </h2>
+    <div className="min-h-screen bg-[#FDFDFD] flex flex-col items-center justify-center p-6">
+      {/* AUTH CARD WITH BLUE BACKGROUND */}
+      <div className="w-full max-w-md bg-blue-700 border border-blue-800 rounded-[2.5rem] p-10 shadow-[0_30px_60px_-15px_rgba(37,99,235,0.3)]">
+        <header className="mb-10">
+          <h2 className="text-3xl font-black tracking-tighter text-white uppercase italic">
+            {isLogin ? "Login" : "Sign Up"}
+          </h2>
+          <div className="h-1.5 w-12 bg-yellow-500 mt-3 rounded-full" />
+        </header>
 
-        <p className="text-zinc-500 text-sm mb-8">
-          {isLogin
-            ? "Login to continue"
-            : "Create account using Email & Password"}
-        </p>
-
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-6">
           {/* EMAIL */}
-          <div className="relative">
-            <Mail className="absolute left-3 top-3.5 h-4 w-4 text-zinc-500" />
+          <div>
+            <label className={labelClass}>Email Address</label>
             <input
               type="email"
-              placeholder="Email Address"
+              placeholder="name@example.com"
               required
               className={inputClass}
               onChange={(e) =>
@@ -81,11 +80,11 @@ export const AuthPage: React.FC = () => {
           </div>
 
           {/* PASSWORD */}
-          <div className="relative">
-            <Lock className="absolute left-3 top-3.5 h-4 w-4 text-zinc-500" />
+          <div>
+            <label className={labelClass}>Password</label>
             <input
               type="password"
-              placeholder="Password"
+              placeholder="••••••••"
               required
               className={inputClass}
               onChange={(e) =>
@@ -94,21 +93,27 @@ export const AuthPage: React.FC = () => {
             />
           </div>
 
-          {/* BUTTON */}
+          {/* YELLOW SUBMIT BUTTON */}
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-cyan-500 hover:bg-cyan-600 text-black font-bold py-3 rounded-lg flex items-center justify-center gap-2 transition-all"
+            className="group w-full bg-yellow-500 hover:bg-yellow-400 text-black font-black text-xs uppercase tracking-[0.2em] py-4 rounded-2xl flex items-center justify-center gap-3 transition-all shadow-xl shadow-yellow-500/20 active:scale-95 disabled:opacity-50"
           >
             {loading ? "Processing..." : isLogin ? "Login" : "Sign Up"}
-            <ArrowRight size={18} />
+            {!loading && (
+              <ArrowRight
+                size={16}
+                className="transition-transform group-hover:translate-x-1"
+              />
+            )}
           </button>
         </form>
 
-        <div className="mt-6 text-center">
+        {/* TOGGLE AUTH */}
+        <div className="mt-10 pt-8 border-t border-white/10 text-center">
           <button
             onClick={() => setIsLogin(!isLogin)}
-            className="text-sm text-zinc-400 hover:text-cyan-400"
+            className="text-xs font-black text-white hover:text-yellow-400 uppercase tracking-widest transition-colors"
           >
             {isLogin
               ? "Don't have an account? Sign Up"
