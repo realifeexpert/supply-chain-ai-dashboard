@@ -1,57 +1,85 @@
 import time
-import sys
 from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, declarative_base
 from sqlalchemy.exc import OperationalError
 
-# Import the settings (which include DATABASE_URL)
 from .config import settings
 
+
+# =========================
+# DATABASE CONNECTION (WITH RETRY)
+# =========================
 def connect_with_retry():
     """
-    Attempts to connect to the database with a retry mechanism.
-    This is useful for docker-compose startup sequences.
+    Tries to connect to the database with retry.
+    Useful for Docker / Render cold start.
     """
     retries = 5
     delay = 2
+
     for attempt in range(retries):
         try:
-            # Try to create an engine and establish a connection
-            engine = create_engine(settings.DATABASE_URL)
+            engine = create_engine(
+                settings.DATABASE_URL,
+
+                # Production-safe pooling
+                pool_pre_ping=True,
+                pool_size=5,
+                max_overflow=10,
+                pool_timeout=30,
+
+                # Needed for Supabase/Postgres stability
+                pool_recycle=1800,
+            )
+
             connection = engine.connect()
             connection.close()
+
             print("✅ Database connection successful!")
             return engine
+
         except OperationalError:
-            # If connection fails (e.g., DB not ready), wait and retry
-            print(f"Database connection failed. Attempt {attempt + 1} of {retries}.")
+            print(f"Database connection failed. Attempt {attempt + 1}/{retries}")
+
             if attempt < retries - 1:
                 print(f"Retrying in {delay} seconds...")
                 time.sleep(delay)
             else:
-                # If all retries fail, print error and raise the exception
-                print("❌ Could not connect to the database after several retries.")
+                print("❌ Could not connect to database.")
                 raise
 
-# --- Database Setup ---
-# Create the SQLAlchemy engine using the retry logic
+
+# =========================
+# ENGINE
+# =========================
 engine = connect_with_retry()
 
-# Create a configured "Session" class
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-# Create a base class for our models to inherit from
+# =========================
+# SESSION
+# =========================
+SessionLocal = sessionmaker(
+    autocommit=False,
+    autoflush=False,
+    bind=engine
+)
+
+
+# =========================
+# BASE MODEL
+# =========================
 Base = declarative_base()
 
-# --- Dependency ---
+
+# =========================
+# FASTAPI DEPENDENCY
+# =========================
 def get_db():
     """
-    FastAPI dependency to create and manage a database session
-    for each incoming request.
+    Creates a new DB session per request and closes safely.
     """
     db = SessionLocal()
     try:
-        yield db  # Provide the session to the request
+        yield db
     finally:
-        db.close() # Ensure the session is closed after the request is finished
+        db.close()

@@ -1,25 +1,69 @@
+import os
+from dotenv import load_dotenv
 from datetime import datetime, timedelta
 from typing import Any, Union
 from jose import jwt
 from passlib.context import CryptContext
 
-# Configuration - In a real app, move these to environment variables
-SECRET_KEY = "YOUR_SUPER_SECRET_KEY_DONT_SHARE" 
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7 # Token valid for 7 days
+# Load environment variables from .env
+load_dotenv()
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+# ==============================
+# ENV CONFIG
+# ==============================
+
+SECRET_KEY = os.getenv("SECRET_KEY")
+ALGORITHM = os.getenv("ALGORITHM", "HS256")
+ACCESS_TOKEN_EXPIRE_MINUTES = int(
+    os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 10080)  # Default = 7 days
+)
+
+if not SECRET_KEY:
+    raise ValueError("SECRET_KEY is not set in environment variables")
+
+
+# ==============================
+# PASSWORD HASHING (BCRYPT)
+# ==============================
+
+pwd_context = CryptContext(
+    schemes=["bcrypt"],
+    deprecated="auto"
+)
+
 
 def hash_password(password: str) -> str:
-    """Hashes a plain-text password."""
+    """
+    Hash a plain password using bcrypt.
+    """
     return pwd_context.hash(password)
 
+
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    """Checks if the plain password matches the hashed one."""
+    """
+    Verify a plain password against hashed password.
+    """
     return pwd_context.verify(plain_password, hashed_password)
 
+
+# ==============================
+# JWT TOKEN CREATION
+# ==============================
+
 def create_access_token(subject: Union[str, Any]) -> str:
-    """Creates a JWT access token."""
+    """
+    Create JWT access token.
+
+    subject = usually user.id
+    """
     expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    to_encode = {"exp": expire, "sub": str(subject)}
-    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+
+    payload = {
+        "sub": str(subject),
+        "exp": expire,
+        "iat": datetime.utcnow(),
+        "type": "access_token"
+    }
+
+    token = jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
+    return token
