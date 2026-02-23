@@ -18,34 +18,33 @@ export const TopProductsChart: React.FC<TopProductsChartProps> = ({ data }) => (
   <div style={{ width: "100%", height: 300 }}>
     <ResponsiveContainer>
       <BarChart data={data} layout="vertical" margin={{ left: 20 }}>
-        {/* Grid */}
-        <CartesianGrid stroke="#e5e7eb" horizontal={false} />
+        {/* Grid (theme aware) */}
+        <CartesianGrid stroke="var(--grid-color)" horizontal={false} />
 
-        {/* X Axis — Hidden numeric */}
+        {/* Hidden numeric axis */}
         <XAxis type="number" hide />
 
         {/* Y Axis — ALWAYS BOLD */}
         <YAxis
           type="category"
           dataKey="name"
-          stroke="#374151"
           fontSize={13}
           tickLine={false}
           axisLine={false}
           width={120}
           interval={0}
-          tick={{ fontWeight: 700, fill: "#111827" }} // Bold text
+          tick={{ fontWeight: 700, fill: "var(--axis-text)" }}
         />
 
-        {/* Tooltip — ALL TEXT BOLD */}
+        {/* Tooltip — ALWAYS BOLD + Theme Aware */}
         <Tooltip
-          cursor={{ fill: "#f3f4f6" }}
+          cursor={{ fill: "var(--tooltip-hover)" }}
           contentStyle={{
-            backgroundColor: "#ffffff",
-            border: "1px solid #e5e7eb",
+            backgroundColor: "var(--tooltip-bg)",
+            border: "1px solid var(--tooltip-border)",
             borderRadius: "8px",
             fontWeight: "700",
-            color: "#111827",
+            color: "var(--tooltip-text)",
           }}
           labelStyle={{ fontWeight: 700 }}
           itemStyle={{ fontWeight: 700 }}
@@ -54,9 +53,9 @@ export const TopProductsChart: React.FC<TopProductsChartProps> = ({ data }) => (
         {/* Bars */}
         <Bar
           dataKey="value"
-          fill="#2563eb"
+          fill="var(--bar-color)"
           radius={[0, 6, 6, 0]}
-          background={{ fill: "#f3f4f6", radius: 6 }}
+          background={{ fill: "var(--bar-track)", radius: 6 }}
         />
       </BarChart>
     </ResponsiveContainer>

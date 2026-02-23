@@ -13,18 +13,16 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-// Define available map styles and their corresponding Mapbox style URLs
 export const mapStyles = {
   Default: "mapbox://styles/mapbox/dark-v11",
   Satellite: "mapbox://styles/mapbox/satellite-streets-v12",
   Terrain: "mapbox://styles/mapbox/outdoors-v12",
 };
-export type MapStyle = keyof typeof mapStyles; // Type for the map style keys
+export type MapStyle = keyof typeof mapStyles;
 
-// Define the props accepted by the MapControls component
 interface MapControlsProps {
-  currentStyle: MapStyle; // The currently selected map style
-  onStyleChange: (style: MapStyle) => void; // Callback when the map style changes
+  currentStyle: MapStyle;
+  onStyleChange: (style: MapStyle) => void;
   showTraffic: boolean;
   onTrafficToggle: () => void;
   show3D: boolean;
@@ -39,43 +37,29 @@ interface MapControlsProps {
   onWildfiresToggle: () => void;
   showAirQuality: boolean;
   onAirQualityToggle: () => void;
-  className?: string; // Optional additional class names
+  className?: string;
 }
 
-/**
- * Custom hook to detect clicks outside of a specified element.
- * @param ref - A React ref object pointing to the element to monitor.
- * @param handler - The callback function to execute when a click outside occurs.
- */
 function useOnClickOutside(
   ref: React.RefObject<HTMLDivElement | null>,
-  handler: () => void
+  handler: () => void,
 ) {
   useEffect(() => {
     const listener = (event: MouseEvent | TouchEvent) => {
-      // Do nothing if clicking ref's element or descendant elements
       if (!ref.current || ref.current.contains(event.target as Node)) {
         return;
       }
-      handler(); // Call the handler if the click is outside
+      handler();
     };
-
-    // Add event listeners for mouse down and touch start
     document.addEventListener("mousedown", listener);
     document.addEventListener("touchstart", listener);
-
-    // Cleanup function to remove the listeners when the component unmounts or dependencies change
     return () => {
       document.removeEventListener("mousedown", listener);
       document.removeEventListener("touchstart", listener);
     };
-  }, [ref, handler]); // Re-run effect if ref or handler changes
+  }, [ref, handler]);
 }
 
-/**
- * A component providing map control options like style switching and layer toggling.
- * It appears as a button that expands into a panel.
- */
 export const MapControls: React.FC<MapControlsProps> = ({
   currentStyle,
   onStyleChange,
@@ -95,15 +79,11 @@ export const MapControls: React.FC<MapControlsProps> = ({
   onAirQualityToggle,
   className,
 }) => {
-  // State to manage whether the control panel is open or closed
   const [isOpen, setIsOpen] = useState(false);
-  // Ref to the main div of the control panel for the click-outside hook
   const controlRef = useRef<HTMLDivElement>(null);
 
-  // Use the custom hook to close the panel when clicking outside of it
   useOnClickOutside(controlRef, () => setIsOpen(false));
 
-  // Array defining the available map detail layers and their properties
   const mapDetails = [
     {
       id: "traffic",
@@ -157,22 +137,25 @@ export const MapControls: React.FC<MapControlsProps> = ({
   ];
 
   return (
-    <div ref={controlRef} className={cn("relative", className)}>
-      {/* The main button to toggle the control panel */}
+    <div
+      ref={controlRef}
+      className={cn("relative transition-colors duration-300", className)}
+    >
+      {/* Main Toggle Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="bg-zinc-900/80 backdrop-blur-md text-white p-2.5 rounded-lg shadow-lg border border-zinc-700/50 hover:bg-zinc-800 transition-colors"
+        className="bg-white/90 dark:bg-zinc-900/80 backdrop-blur-md text-zinc-900 dark:text-white p-2.5 rounded-xl shadow-lg border border-gray-200 dark:border-zinc-700/50 hover:bg-gray-50 dark:hover:bg-zinc-800 transition-all active:scale-95"
         aria-label="Toggle map layers"
       >
         <Layers size={20} />
       </button>
 
-      {/* Conditionally render the control panel when isOpen is true */}
+      {/* Control Panel */}
       {isOpen && (
-        <div className="absolute top-0 right-0 mt-12 w-64 bg-zinc-900/80 backdrop-blur-md rounded-lg shadow-2xl border border-zinc-700/50 text-white animate-in fade-in-0 zoom-in-95">
-          {/* Section for changing the map type/style */}
-          <div className="p-3">
-            <h4 className="font-semibold text-sm mb-2 text-zinc-300">
+        <div className="absolute top-0 right-0 mt-14 w-64 bg-white/95 dark:bg-zinc-900/90 backdrop-blur-xl rounded-2xl shadow-2xl border border-gray-200 dark:border-zinc-700/50 text-zinc-900 dark:text-white animate-in fade-in-0 zoom-in-95 duration-200 origin-top-right">
+          {/* Map Type Section */}
+          <div className="p-4">
+            <h4 className="text-[11px] font-bold uppercase tracking-widest mb-3 text-gray-500 dark:text-zinc-400 ml-1">
               Map Type
             </h4>
             <div className="grid grid-cols-3 gap-2">
@@ -181,11 +164,10 @@ export const MapControls: React.FC<MapControlsProps> = ({
                   key={style}
                   onClick={() => onStyleChange(style)}
                   className={cn(
-                    "px-3 py-1.5 text-sm font-medium rounded-md transition-colors",
-                    // Apply different styles if this button represents the current style
+                    "px-2 py-2 text-xs font-bold rounded-lg transition-all",
                     currentStyle === style
-                      ? "bg-cyan-500 text-white shadow-[0_0_10px_rgba(34,211,238,0.4)]"
-                      : "bg-zinc-800 text-zinc-300 hover:bg-zinc-700"
+                      ? "bg-cyan-600 text-white shadow-lg shadow-cyan-600/20"
+                      : "bg-gray-100 dark:bg-zinc-800 text-gray-600 dark:text-zinc-300 hover:bg-gray-200 dark:hover:bg-zinc-700",
                   )}
                 >
                   {style}
@@ -194,35 +176,38 @@ export const MapControls: React.FC<MapControlsProps> = ({
             </div>
           </div>
 
-          {/* Section for toggling map detail layers */}
-          <div className="border-t border-zinc-700/50 p-3">
-            <h4 className="font-semibold text-sm mb-2 text-zinc-300">
+          {/* Map Details Section */}
+          <div className="border-t border-gray-100 dark:border-zinc-700/50 p-4">
+            <h4 className="text-[11px] font-bold uppercase tracking-widest mb-3 text-gray-500 dark:text-zinc-400 ml-1">
               Map Details
             </h4>
-            {/* Scrollable area for the list of map details */}
-            <div className="space-y-1 max-h-[240px] overflow-y-auto pr-1">
+            <div className="space-y-1 max-h-[260px] overflow-y-auto pr-1 custom-scrollbar">
               {mapDetails.map((detail) => (
-                // Each detail is a label wrapping the content and the toggle switch
                 <label
                   key={detail.id}
                   htmlFor={detail.id}
-                  className="flex items-center justify-between p-2 rounded-md hover:bg-zinc-800 cursor-pointer"
+                  className="flex items-center justify-between p-2.5 rounded-xl hover:bg-gray-100 dark:hover:bg-zinc-800/50 cursor-pointer transition-colors group"
                 >
                   <div className="flex items-center gap-3">
-                    <detail.icon size={18} className="text-zinc-400" />
-                    <span className="text-sm font-medium">{detail.label}</span>
+                    <detail.icon
+                      size={18}
+                      className="text-gray-400 dark:text-zinc-500 group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors"
+                    />
+                    <span className="text-sm font-semibold text-gray-700 dark:text-zinc-200">
+                      {detail.label}
+                    </span>
                   </div>
-                  {/* Custom styled toggle switch */}
+
+                  {/* Premium Toggle Switch */}
                   <div className="relative inline-flex items-center cursor-pointer">
                     <input
                       type="checkbox"
                       id={detail.id}
-                      className="sr-only peer" // Hide the default checkbox
+                      className="sr-only peer"
                       checked={detail.state}
                       onChange={detail.action}
                     />
-                    {/* The visual track and thumb of the toggle switch */}
-                    <div className="w-9 h-5 bg-zinc-700 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-cyan-600"></div>
+                    <div className="w-9 h-5 bg-gray-200 dark:bg-zinc-700 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-cyan-600 shadow-inner"></div>
                   </div>
                 </label>
               ))}

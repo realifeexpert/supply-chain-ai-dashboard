@@ -85,6 +85,7 @@ const OrdersPage: React.FC = () => {
 
   return (
     <>
+      {/* MODALS */}
       <AddOrderModal
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
@@ -115,41 +116,59 @@ const OrdersPage: React.FC = () => {
         loading={isDeleting}
       />
 
-      <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-        {/* Header */}
+      {/* PAGE */}
+      <div
+        className="
+          rounded-xl shadow-sm p-6 border
+          bg-white border-gray-200
+          dark:bg-zinc-900 dark:border-zinc-800
+          text-gray-900 dark:text-white
+          transition-colors
+        "
+      >
+        {/* HEADER */}
         <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">
-              Order Management
-            </h1>
-            <p className="text-sm font-bold text-gray-600">
+            <h1 className="text-2xl font-bold">Order Management</h1>
+            <p className="text-sm font-bold text-gray-600 dark:text-zinc-400">
               Track and manage customer orders
             </p>
           </div>
 
           <button
             onClick={() => setIsAddModalOpen(true)}
-            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold px-5 py-2 rounded-lg shadow-sm transition"
+            className="
+              flex items-center gap-2 px-5 py-2 rounded-lg shadow-sm font-bold transition
+              bg-blue-600 hover:bg-blue-700 text-white
+              dark:bg-blue-500 dark:hover:bg-blue-600
+            "
           >
             <PlusCircle size={18} />
             Add Order
           </button>
         </div>
 
-        {/* Search */}
+        {/* SEARCH */}
         <div className="mb-5">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500 dark:text-zinc-500" />
+
             <input
               type="text"
               placeholder="Search order id, name, email..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-gray-50 border border-gray-200 rounded-lg pl-10 pr-4 py-2 font-bold text-gray-900 focus:ring-2 focus:ring-blue-500 outline-none"
+              className="
+                w-full pl-10 pr-4 py-2 rounded-lg border font-bold outline-none transition
+                bg-gray-50 border-gray-200 text-gray-900
+                focus:ring-2 focus:ring-blue-500
+                dark:bg-zinc-800 dark:border-zinc-700 dark:text-white
+              "
             />
           </div>
         </div>
 
+        {/* TABLE */}
         <OrderTable
           loading={loading}
           error={error}

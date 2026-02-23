@@ -9,7 +9,7 @@ import {
 } from "recharts";
 import type { AnalyticsSummary } from "@/types";
 
-/* Light UI friendly colors */
+/* Theme-aware colors (works in both light & dark UI) */
 const DELIVERY_COLORS = ["#2563eb", "#ef4444"]; // Blue, Red
 
 interface DeliveryPieChartProps {
@@ -26,7 +26,7 @@ export const DeliveryPieChart: React.FC<DeliveryPieChartProps> = ({ data }) => {
 
   if (totalDeliveries === 0) {
     return (
-      <div className="h-[300px] flex items-center justify-center text-gray-600 font-bold">
+      <div className="h-[300px] flex items-center justify-center text-gray-600 dark:text-zinc-400 font-bold">
         No delivery data available.
       </div>
     );
@@ -44,7 +44,7 @@ export const DeliveryPieChart: React.FC<DeliveryPieChartProps> = ({ data }) => {
             outerRadius={85}
             paddingAngle={4}
             dataKey="value"
-            stroke="#ffffff"
+            stroke="var(--pie-stroke)"
             strokeWidth={2}
           >
             {chartData.map((_, index) => (
@@ -55,14 +55,14 @@ export const DeliveryPieChart: React.FC<DeliveryPieChartProps> = ({ data }) => {
             ))}
           </Pie>
 
-          {/* Tooltip — ALL TEXT BOLD */}
+          {/* Tooltip — Always Bold + Theme Aware */}
           <Tooltip
             contentStyle={{
-              backgroundColor: "#ffffff",
-              border: "1px solid #e5e7eb",
+              backgroundColor: "var(--tooltip-bg)",
+              border: "1px solid var(--tooltip-border)",
               borderRadius: "8px",
-              fontWeight: "700", // Bold
-              color: "#111827",
+              fontWeight: "700",
+              color: "var(--tooltip-text)",
             }}
             labelStyle={{ fontWeight: 700 }}
             itemStyle={{ fontWeight: 700 }}
@@ -71,12 +71,12 @@ export const DeliveryPieChart: React.FC<DeliveryPieChartProps> = ({ data }) => {
             }
           />
 
-          {/* Legend — ALWAYS BOLD */}
+          {/* Legend — Always Bold + Theme Aware */}
           <Legend
             iconType="circle"
             wrapperStyle={{
               fontWeight: 700,
-              color: "#111827",
+              color: "var(--legend-text)",
             }}
           />
         </PieChart>

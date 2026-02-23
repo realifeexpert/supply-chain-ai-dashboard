@@ -41,8 +41,8 @@ export const OrderStatusChart: React.FC<OrderStatusChartProps> = ({ data }) => {
           layout="vertical"
           margin={{ left: 10, right: 30 }}
         >
-          {/* Grid */}
-          <CartesianGrid stroke="#e5e7eb" horizontal={false} />
+          {/* Grid (theme aware) */}
+          <CartesianGrid stroke="var(--grid-color)" horizontal={false} />
 
           {/* Hidden X axis */}
           <XAxis type="number" hide />
@@ -51,24 +51,23 @@ export const OrderStatusChart: React.FC<OrderStatusChartProps> = ({ data }) => {
           <YAxis
             type="category"
             dataKey="status"
-            stroke="#374151"
             fontSize={13}
             tickLine={false}
             axisLine={false}
             width={110}
             interval={0}
-            tick={{ fontWeight: 700, fill: "#111827" }}
+            tick={{ fontWeight: 700, fill: "var(--axis-text)" }}
           />
 
-          {/* Tooltip — ALL TEXT BOLD */}
+          {/* Tooltip — ALWAYS BOLD + Theme Aware */}
           <Tooltip
-            cursor={{ fill: "#f3f4f6" }}
+            cursor={{ fill: "var(--tooltip-hover)" }}
             contentStyle={{
-              backgroundColor: "#ffffff",
-              border: "1px solid #e5e7eb",
+              backgroundColor: "var(--tooltip-bg)",
+              border: "1px solid var(--tooltip-border)",
               borderRadius: "8px",
               fontWeight: "700",
-              color: "#111827",
+              color: "var(--tooltip-text)",
             }}
             labelStyle={{ fontWeight: 700 }}
             itemStyle={{ fontWeight: 700 }}
@@ -77,7 +76,7 @@ export const OrderStatusChart: React.FC<OrderStatusChartProps> = ({ data }) => {
           {/* Background Track */}
           <Bar
             dataKey="value"
-            fill="#f3f4f6"
+            fill="var(--track-bg)"
             background={{ fill: "transparent" }}
             radius={6}
             barSize={22}

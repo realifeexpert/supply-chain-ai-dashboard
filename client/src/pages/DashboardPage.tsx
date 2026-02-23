@@ -38,23 +38,27 @@ const KPICard: React.FC<KPICardProps> = ({
   icon: Icon,
   change,
 }) => (
-  <div className="bg-white rounded-xl shadow-sm p-5 flex flex-col justify-between border border-gray-200 hover:shadow-md transition">
+  <div className="bg-white dark:bg-zinc-900 rounded-xl shadow-sm p-5 flex flex-col justify-between border border-gray-200 dark:border-zinc-800 hover:shadow-md transition">
     <div className="flex items-center justify-between">
-      <h3 className="text-sm font-bold text-gray-500 truncate">{title}</h3>
-      <Icon className="h-5 w-5 text-gray-400 flex-shrink-0" />
+      <h3 className="text-sm font-bold text-gray-500 dark:text-zinc-400 truncate">
+        {title}
+      </h3>
+      <Icon className="h-5 w-5 text-gray-400 dark:text-zinc-400 flex-shrink-0" />
     </div>
 
     <div>
-      <p className="text-3xl font-bold text-gray-900">{value}</p>
+      <p className="text-3xl font-bold text-gray-900 dark:text-white">
+        {value}
+      </p>
 
       {change && (
         <p
           className={`text-xs mt-1 font-bold ${
             change.startsWith("+")
-              ? "text-green-600"
+              ? "text-green-600 dark:text-green-400"
               : change.startsWith("-")
-                ? "text-red-600"
-                : "text-gray-500"
+                ? "text-red-600 dark:text-red-400"
+                : "text-gray-500 dark:text-zinc-400"
           }`}
         >
           {change}
@@ -121,8 +125,10 @@ const DashboardPage: React.FC = () => {
   }, []);
 
   return (
-    <div className="flex flex-col gap-6 bg-gray-50 min-h-screen p-6">
-      <h1 className="text-3xl font-bold text-gray-900">Dashboard Overview</h1>
+    <div className="flex flex-col gap-6 bg-gray-50 dark:bg-zinc-950 min-h-screen p-6">
+      <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+        Dashboard Overview
+      </h1>
 
       {/* KPI Cards */}
       {summaryLoading ? (
@@ -130,15 +136,15 @@ const DashboardPage: React.FC = () => {
           {[...Array(6)].map((_, i) => (
             <div
               key={i}
-              className="bg-white rounded-xl p-5 h-[108px] animate-pulse border border-gray-200"
+              className="bg-white dark:bg-zinc-900 rounded-xl p-5 h-[108px] animate-pulse border border-gray-200 dark:border-zinc-800"
             >
-              <div className="h-4 bg-gray-200 rounded w-3/4 mb-4"></div>
-              <div className="h-8 bg-gray-200 rounded w-1/2"></div>
+              <div className="h-4 bg-gray-200 dark:bg-zinc-800 rounded w-3/4 mb-4"></div>
+              <div className="h-8 bg-gray-200 dark:bg-zinc-800 rounded w-1/2"></div>
             </div>
           ))}
         </div>
       ) : summaryError ? (
-        <p className="text-red-600 font-bold bg-red-50 p-4 rounded-lg border border-red-200">
+        <p className="text-red-600 dark:text-red-400 font-bold bg-red-50 dark:bg-red-900/20 p-4 rounded-lg border border-red-200 dark:border-red-800">
           {summaryError}
         </p>
       ) : summaryData?.kpi_cards ? (
@@ -154,22 +160,24 @@ const DashboardPage: React.FC = () => {
           ))}
         </div>
       ) : (
-        <p className="text-gray-500 font-bold">No summary data available.</p>
+        <p className="text-gray-500 dark:text-zinc-400 font-bold">
+          No summary data available.
+        </p>
       )}
 
       {/* Chart */}
-      <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-        <h2 className="text-xl font-bold text-gray-900 mb-4">
+      <div className="bg-white dark:bg-zinc-900 rounded-xl shadow-sm p-6 border border-gray-200 dark:border-zinc-800">
+        <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
           Monthly Revenue (Last 6 Months)
         </h2>
 
         <div style={{ width: "100%", height: 300 }}>
           {monthlyRevenueLoading ? (
-            <div className="h-full flex items-center justify-center text-gray-500 font-bold">
+            <div className="h-full flex items-center justify-center text-gray-500 dark:text-zinc-400 font-bold">
               Loading chart...
             </div>
           ) : monthlyRevenueError ? (
-            <div className="h-full flex items-center justify-center text-red-600 font-bold">
+            <div className="h-full flex items-center justify-center text-red-600 dark:text-red-400 font-bold">
               {monthlyRevenueError}
             </div>
           ) : monthlyRevenueData.length > 0 ? (
@@ -229,7 +237,7 @@ const DashboardPage: React.FC = () => {
               </BarChart>
             </ResponsiveContainer>
           ) : (
-            <div className="h-full flex items-center justify-center text-gray-500 font-bold">
+            <div className="h-full flex items-center justify-center text-gray-500 dark:text-zinc-400 font-bold">
               No revenue data available.
             </div>
           )}

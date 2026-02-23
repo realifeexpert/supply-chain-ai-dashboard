@@ -119,14 +119,14 @@ const InventoryPage: React.FC = () => {
       )}
 
       {/* Page */}
-      <div className="bg-white rounded-xl shadow-sm p-5 sm:p-6 border border-gray-200">
+      <div className="bg-white dark:bg-zinc-900 rounded-xl shadow-sm p-5 sm:p-6 border border-gray-200 dark:border-zinc-800">
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
               Inventory Management
             </h1>
-            <p className="text-sm font-bold text-gray-600">
+            <p className="text-sm font-bold text-gray-600 dark:text-zinc-400">
               Track and manage product stock levels
             </p>
           </div>
@@ -143,20 +143,20 @@ const InventoryPage: React.FC = () => {
         {/* Search */}
         <div className="mb-5">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500 dark:text-zinc-500" />
             <input
               type="search"
               placeholder="Search by name, SKU, or category..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-gray-50 border border-gray-200 rounded-lg pl-10 pr-4 py-2 font-bold text-gray-900 focus:ring-2 focus:ring-blue-500 outline-none"
+              className="w-full bg-gray-50 dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 rounded-lg pl-10 pr-4 py-2 font-bold text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none"
             />
           </div>
         </div>
 
         {/* Content */}
         {loading ? (
-          <div className="text-center py-12 font-bold text-gray-600 flex justify-center items-center gap-3">
+          <div className="text-center py-12 font-bold text-gray-600 dark:text-zinc-400 flex justify-center items-center gap-3">
             <svg
               className="animate-spin h-6 w-6 text-blue-600"
               viewBox="0 0 24 24"
@@ -179,7 +179,7 @@ const InventoryPage: React.FC = () => {
             Loading inventory...
           </div>
         ) : filteredProducts.length === 0 ? (
-          <div className="text-center py-12 font-bold text-gray-600 bg-gray-50 rounded-lg">
+          <div className="text-center py-12 font-bold text-gray-600 dark:text-zinc-400 bg-gray-50 dark:bg-zinc-800 rounded-lg">
             {searchTerm
               ? `No products found for "${searchTerm}"`
               : "No products found. Add a new item."}

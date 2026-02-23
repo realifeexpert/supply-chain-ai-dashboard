@@ -1,1 +1,41 @@
 @import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  --grid-color: #e5e7eb;
+  --axis-text: #111827;
+  --tooltip-bg: #ffffff;
+  --tooltip-border: #e5e7eb;
+  --tooltip-text: #111827;
+  --tooltip-hover: #f3f4f6;
+  --bar-color: #2563eb;
+  --bar-track: #f3f4f6;
+  --line-color: #2563eb;
+  --line-dot: #1d4ed8;
+}
+
+.dark {
+  --grid-color: #3f3f46;
+  --axis-text: #e4e4e7;
+  --tooltip-bg: #18181b;
+  --tooltip-border: #3f3f46;
+  --tooltip-text: #ffffff;
+  --tooltip-hover: #27272a;
+  --bar-color: #60a5fa;
+  --bar-track: #18181b;
+  --line-color: #60a5fa;
+  --line-dot: #3b82f6;
+}
+
+html {
+  transition:
+    background-color 0.25s ease,
+    color 0.25s ease;
+}
+
+* {
+  transition:
+    background-color 0.25s ease,
+    border-color 0.25s ease,
+    color 0.25s ease;
+}

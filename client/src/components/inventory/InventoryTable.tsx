@@ -26,10 +26,10 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
 
   return (
     <div className="overflow-x-auto">
-      <table className="min-w-full divide-y divide-gray-200">
+      <table className="min-w-full border border-gray-200 dark:border-zinc-800 rounded-lg overflow-hidden">
         {/* HEADER */}
-        <thead className="bg-gray-100">
-          <tr className="text-xs font-bold text-gray-700 uppercase">
+        <thead className="bg-gray-100 dark:bg-zinc-900">
+          <tr className="text-xs font-bold text-gray-700 dark:text-zinc-300 uppercase">
             <th className="px-4 py-3 text-left">Product</th>
             <th className="px-4 py-3 text-left">SKU</th>
             <th className="px-4 py-3 text-left">Stock</th>
@@ -40,14 +40,17 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
         </thead>
 
         {/* BODY */}
-        <tbody className="bg-white divide-y divide-gray-200 text-sm font-bold text-gray-900">
+        <tbody className="bg-white dark:bg-zinc-950 divide-y divide-gray-200 dark:divide-zinc-800 text-sm font-bold text-gray-900 dark:text-zinc-100">
           {products.map((product) => (
-            <tr key={product.id} className="hover:bg-gray-50 transition">
+            <tr
+              key={product.id}
+              className="transition hover:bg-gray-50 dark:hover:bg-zinc-900"
+            >
               {/* PRODUCT */}
               <td className="px-4 py-4 whitespace-nowrap">{product.name}</td>
 
               {/* SKU */}
-              <td className="px-4 py-4 whitespace-nowrap font-mono text-gray-600">
+              <td className="px-4 py-4 whitespace-nowrap font-mono text-gray-600 dark:text-zinc-400">
                 {product.sku}
               </td>
 
@@ -63,7 +66,7 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
                 )}
               </td>
 
-              {/* STATUS — Dark Badge Compatible */}
+              {/* STATUS */}
               <td className="px-4 py-4 whitespace-nowrap">
                 <StockStatusBadge status={product.status} />
               </td>
@@ -74,7 +77,7 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
                   {/* VIEW */}
                   <button
                     onClick={() => onView(product)}
-                    className="text-gray-500 hover:text-gray-900"
+                    className="text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white transition"
                     title="View Details"
                   >
                     <Eye size={16} />
@@ -83,7 +86,7 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
                   {/* EDIT */}
                   <button
                     onClick={() => onEdit(product)}
-                    className="text-blue-600 hover:text-blue-700"
+                    className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition"
                     title="Edit Product"
                   >
                     <Pencil size={16} />
@@ -92,7 +95,7 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
                   {/* DELETE */}
                   <button
                     onClick={() => onDelete(product)}
-                    className="text-red-600 hover:text-red-700"
+                    className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 transition"
                     title="Delete Product"
                   >
                     <Trash2 size={16} />

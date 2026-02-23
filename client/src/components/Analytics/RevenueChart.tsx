@@ -30,53 +30,55 @@ export const RevenueChart: React.FC<RevenueChartProps> = ({ data }) => {
           data={formattedData}
           margin={{ top: 5, right: 20, bottom: 5, left: 10 }}
         >
-          {/* Grid */}
-          <CartesianGrid stroke="#e5e7eb" strokeDasharray="3 3" />
+          {/* Grid (theme aware) */}
+          <CartesianGrid stroke="var(--grid-color)" strokeDasharray="3 3" />
 
           {/* Line */}
           <Line
             type="monotone"
             dataKey="revenue"
-            stroke="#2563eb"
+            stroke="var(--line-color)"
             strokeWidth={3}
-            dot={{ r: 4, fill: "#1d4ed8" }}
-            activeDot={{ r: 6, stroke: "#2563eb", fill: "#1d4ed8" }}
+            dot={{ r: 4, fill: "var(--line-dot)" }}
+            activeDot={{
+              r: 6,
+              stroke: "var(--line-color)",
+              fill: "var(--line-dot)",
+            }}
           />
 
           {/* X Axis — ALWAYS BOLD */}
           <XAxis
             dataKey="displayDate"
-            stroke="#374151"
             fontSize={13}
             tickLine={false}
             axisLine={false}
             interval="preserveStartEnd"
-            tick={{ fontWeight: 700, fill: "#111827" }}
+            tick={{ fontWeight: 700, fill: "var(--axis-text)" }}
           />
 
           {/* Y Axis — ALWAYS BOLD */}
           <YAxis
-            stroke="#374151"
             fontSize={13}
             tickLine={false}
             axisLine={false}
             width={80}
             tickFormatter={(value) => `₹${value.toLocaleString()}`}
-            tick={{ fontWeight: 700, fill: "#111827" }}
+            tick={{ fontWeight: 700, fill: "var(--axis-text)" }}
           />
 
-          {/* Tooltip — ALL TEXT BOLD */}
+          {/* Tooltip — ALWAYS BOLD + Theme Aware */}
           <Tooltip
-            cursor={{ stroke: "#d1d5db", strokeWidth: 1 }}
+            cursor={{ stroke: "var(--tooltip-cursor)", strokeWidth: 1 }}
             contentStyle={{
-              backgroundColor: "#ffffff",
-              border: "1px solid #e5e7eb",
+              backgroundColor: "var(--tooltip-bg)",
+              border: "1px solid var(--tooltip-border)",
               borderRadius: "8px",
               fontWeight: "700",
-              color: "#111827",
+              color: "var(--tooltip-text)",
             }}
             labelStyle={{ fontWeight: 700 }}
-            itemStyle={{ fontWeight: 700, color: "#2563eb" }}
+            itemStyle={{ fontWeight: 700, color: "var(--line-color)" }}
             formatter={(value: number) => `₹${value.toLocaleString()}`}
           />
         </LineChart>

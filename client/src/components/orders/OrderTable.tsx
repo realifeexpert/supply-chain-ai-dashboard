@@ -55,10 +55,10 @@ export const OrderTable: React.FC<OrderTableProps> = ({
 
   return (
     <div className="overflow-x-auto">
-      <table className="min-w-full divide-y divide-gray-200">
+      <table className="min-w-full divide-y divide-gray-200 dark:divide-zinc-800">
         {/* HEADER */}
-        <thead className="bg-gray-100">
-          <tr className="text-xs font-bold text-gray-700 uppercase">
+        <thead className="bg-gray-100 dark:bg-zinc-900">
+          <tr className="text-xs font-bold text-gray-700 dark:text-zinc-300 uppercase">
             <th className="px-4 py-3 text-left">Order</th>
             <th className="px-4 py-3 text-left">Customer</th>
             <th className="px-4 py-3 text-left">Contact</th>
@@ -72,12 +72,12 @@ export const OrderTable: React.FC<OrderTableProps> = ({
         </thead>
 
         {/* BODY */}
-        <tbody className="bg-white divide-y divide-gray-200 text-sm font-bold text-gray-900">
+        <tbody className="bg-white dark:bg-zinc-950 divide-y divide-gray-200 dark:divide-zinc-800 text-sm font-bold text-gray-900 dark:text-white">
           {loading ? (
             <tr>
               <td
                 colSpan={9}
-                className="text-center py-8 font-bold text-gray-600"
+                className="text-center py-8 text-gray-600 dark:text-zinc-400"
               >
                 Loading orders...
               </td>
@@ -97,7 +97,7 @@ export const OrderTable: React.FC<OrderTableProps> = ({
             <tr>
               <td
                 colSpan={9}
-                className="text-center py-8 font-bold text-gray-600"
+                className="text-center py-8 text-gray-600 dark:text-zinc-400"
               >
                 No orders found.
               </td>
@@ -110,14 +110,17 @@ export const OrderTable: React.FC<OrderTableProps> = ({
                 "N/A";
 
               return (
-                <tr key={order.id} className="hover:bg-gray-50 transition">
+                <tr
+                  key={order.id}
+                  className="hover:bg-gray-50 dark:hover:bg-zinc-900 transition"
+                >
                   {/* ORDER */}
                   <td className="px-4 py-4">
                     <div className="flex flex-col">
-                      <span className="text-blue-600 font-mono font-bold">
+                      <span className="text-blue-600 dark:text-blue-400 font-mono">
                         #{order.id}
                       </span>
-                      <span className="text-xs font-bold text-gray-500">
+                      <span className="text-xs text-gray-500 dark:text-zinc-500">
                         {formatDate(order.order_date)} •{" "}
                         {getOrderAge(order.order_date)}
                       </span>
@@ -132,7 +135,7 @@ export const OrderTable: React.FC<OrderTableProps> = ({
                   </td>
 
                   {/* CONTACT */}
-                  <td className="px-4 py-4 text-gray-700">
+                  <td className="px-4 py-4 text-gray-700 dark:text-zinc-300">
                     <div className="flex flex-col gap-1">
                       <span className="flex items-center gap-2">
                         <Phone size={14} />
@@ -148,17 +151,17 @@ export const OrderTable: React.FC<OrderTableProps> = ({
                   </td>
 
                   {/* LOCATION */}
-                  <td className="px-4 py-4 text-gray-700">
+                  <td className="px-4 py-4 text-gray-700 dark:text-zinc-300">
                     <span className="flex items-center gap-2">
                       <MapPin size={14} /> {city}
                     </span>
                   </td>
 
-                  {/* PAYMENT — DARK BADGE AREA */}
+                  {/* PAYMENT */}
                   <td className="px-4 py-4">
                     <div className="flex flex-col gap-1">
                       <PaymentStatusBadge status={order.payment_status} />
-                      <span className="text-xs font-bold text-gray-600">
+                      <span className="text-xs text-gray-600 dark:text-zinc-400">
                         {order.payment_method}
                       </span>
                     </div>
@@ -172,7 +175,7 @@ export const OrderTable: React.FC<OrderTableProps> = ({
                     {formatCurrency(order.total_amount)}
                   </td>
 
-                  {/* STATUS — DARK BADGE AREA */}
+                  {/* STATUS */}
                   <td className="px-4 py-4">
                     <StatusBadge status={order.status} />
                   </td>
@@ -182,7 +185,7 @@ export const OrderTable: React.FC<OrderTableProps> = ({
                     <div className="flex justify-end gap-3">
                       <button
                         onClick={() => onView(order)}
-                        className="text-gray-500 hover:text-gray-900"
+                        className="text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
                       >
                         <Eye size={16} />
                       </button>

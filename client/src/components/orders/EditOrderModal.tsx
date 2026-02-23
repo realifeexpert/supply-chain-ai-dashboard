@@ -1,15 +1,13 @@
 import React, { useEffect, useState, type FormEvent } from "react";
-// 'X' icon is no longer imported, as the layout handles the close button
 import type { Order, OrderUpdate } from "@/types";
 import { updateOrder } from "@/services/api";
-// Import the reusable ModalLayout component
 import { ModalLayout } from "@/layouts/ModalLayout";
 
 interface EditOrderModalProps {
   isOpen: boolean;
   onClose: () => void;
-  order: Order | null; // The order object to be edited
-  onOrderUpdated: (updatedOrder: Order) => void; // Callback function on successful update
+  order: Order | null;
+  onOrderUpdated: (updatedOrder: Order) => void;
 }
 
 export const EditOrderModal: React.FC<EditOrderModalProps> = ({
@@ -18,17 +16,12 @@ export const EditOrderModal: React.FC<EditOrderModalProps> = ({
   order,
   onOrderUpdated,
 }) => {
-  // State to hold the fields that can be edited
   const [formData, setFormData] = useState<OrderUpdate>({});
-  // State for displaying submission errors
   const [error, setError] = useState<string | null>(null);
-  // State for managing the submit button's loading spinner
   const [loading, setLoading] = useState(false);
 
-  // Effect to populate the form when the 'order' prop changes (or modal opens)
   useEffect(() => {
     if (order) {
-      // Set the form data from the currently selected order
       setFormData({
         status: order.status,
         payment_status: order.payment_status,
@@ -36,50 +29,42 @@ export const EditOrderModal: React.FC<EditOrderModalProps> = ({
         tracking_id: order.tracking_id,
         vehicle_id: order.vehicle_id,
       });
+      setError(null);
     }
-  }, [order]); // Re-run this effect if the order object changes
+  }, [order]);
 
-  // Generic change handler for all inputs and selects
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
   ) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
   };
 
-  // Handle the form submission to update the order
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (!order) return; // Guard clause
+    if (!order) return;
     setLoading(true);
     setError(null);
     try {
-      // Prepare payload, ensuring vehicle_id is a number or undefined
       const payload = {
         ...formData,
         vehicle_id: Number(formData.vehicle_id) || undefined,
       };
-      // Call the API to update the order
       const response = await updateOrder(order.id, payload);
-      // Notify the parent component of the successful update
       onOrderUpdated(response.data);
-      onClose(); // Close the modal on success
+      onClose();
     } catch (err: any) {
-      // --- Enhanced error handling logic ---
       if (
         err.response?.data?.detail &&
         Array.isArray(err.response.data.detail)
       ) {
-        // Handle Pydantic's detailed validation errors (which come as an array)
         const firstError = err.response.data.detail[0];
-        const field = firstError.loc[1] || "input"; // Get the field name
-        const msg = firstError.msg; // Get the error message
+        const field = firstError.loc[1] || "input";
+        const msg = firstError.msg;
         setError(`Error in '${field}': ${msg}`);
       } else if (err.response?.data?.detail) {
-        // Handle simple string errors from the backend
         setError(err.response.data.detail);
       } else {
-        // Fallback for generic network or other errors
         setError("Failed to update order. Please try again.");
       }
     } finally {
@@ -87,26 +72,30 @@ export const EditOrderModal: React.FC<EditOrderModalProps> = ({
     }
   };
 
-  // The ModalLayout handles the 'isOpen' and 'onClose' logic.
-  // We pass 'isOpen && !!order' to ensure the modal only opens if an order is actually selected.
+  if (!isOpen || !order) return null;
+
+  // Premium Adaptive Input & Select Styles
+  const inputStyles =
+    "w-full bg-gray-50 dark:bg-zinc-900/50 border border-gray-200 dark:border-zinc-700 rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/40 focus:border-cyan-500 transition-all duration-200";
+
   return (
     <ModalLayout
       isOpen={isOpen && !!order}
       onClose={onClose}
-      title={`Edit Order #${order?.id}`} // Pass the dynamic title to the layout
-      size="max-w-md" // Pass the desired size to the layout
+      title={`Edit Order #${order?.id}`}
+      size="max-w-md"
     >
-      {/* The form is passed as 'children' to ModalLayout */}
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-5">
+        {/* ORDER STATUS */}
         <div>
-          <label className="block text-sm font-medium text-zinc-400 mb-1">
+          <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-zinc-400 mb-1.5 ml-1">
             Order Status
           </label>
           <select
             name="status"
             value={formData.status}
             onChange={handleChange}
-            className="w-full bg-zinc-800 border-zinc-700 rounded-lg px-3 py-2"
+            className={inputStyles}
           >
             <option value="Pending">Pending</option>
             <option value="Processing">Processing</option>
@@ -117,15 +106,17 @@ export const EditOrderModal: React.FC<EditOrderModalProps> = ({
             <option value="Returned">Returned</option>
           </select>
         </div>
+
+        {/* PAYMENT STATUS */}
         <div>
-          <label className="block text-sm font-medium text-zinc-400 mb-1">
+          <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-zinc-400 mb-1.5 ml-1">
             Payment Status
           </label>
           <select
             name="payment_status"
             value={formData.payment_status}
             onChange={handleChange}
-            className="w-full bg-zinc-800 border-zinc-700 rounded-lg px-3 py-2"
+            className={inputStyles}
           >
             <option value="Unpaid">Unpaid</option>
             <option value="Paid">Paid</option>
@@ -134,15 +125,17 @@ export const EditOrderModal: React.FC<EditOrderModalProps> = ({
             <option value="Refunded">Refunded</option>
           </select>
         </div>
+
+        {/* SHIPPING PROVIDER */}
         <div>
-          <label className="block text-sm font-medium text-zinc-400 mb-1">
+          <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-zinc-400 mb-1.5 ml-1">
             Shipping Provider
           </label>
           <select
             name="shipping_provider"
             value={formData.shipping_provider}
             onChange={handleChange}
-            className="w-full bg-zinc-800 border-zinc-700 rounded-lg px-3 py-2"
+            className={inputStyles}
           >
             <option value="">None</option>
             <option value="Self-Delivery">Self-Delivery</option>
@@ -151,48 +144,61 @@ export const EditOrderModal: React.FC<EditOrderModalProps> = ({
             <option value="DTDC">DTDC</option>
           </select>
         </div>
-        <div>
-          <label className="block text-sm font-medium text-zinc-400 mb-1">
-            Tracking ID
-          </label>
-          <input
-            name="tracking_id"
-            value={formData.tracking_id || ""}
-            onChange={handleChange}
-            className="w-full bg-zinc-800 border-zinc-700 rounded-lg px-3 py-2"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-zinc-400 mb-1">
-            Assigned Vehicle ID
-          </label>
-          <input
-            name="vehicle_id"
-            type="number"
-            value={formData.vehicle_id || ""}
-            onChange={handleChange}
-            className="w-full bg-zinc-800 border-zinc-700 rounded-lg px-3 py-2"
-          />
+
+        {/* TRACKING & VEHICLE GRID */}
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-zinc-400 mb-1.5 ml-1">
+              Tracking ID
+            </label>
+            <input
+              name="tracking_id"
+              type="text"
+              value={formData.tracking_id || ""}
+              onChange={handleChange}
+              placeholder="e.g. TRK9902"
+              className={inputStyles}
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-zinc-400 mb-1.5 ml-1">
+              Vehicle ID
+            </label>
+            <input
+              name="vehicle_id"
+              type="number"
+              value={formData.vehicle_id || ""}
+              onChange={handleChange}
+              placeholder="Assign ID"
+              className={inputStyles}
+            />
+          </div>
         </div>
 
-        {/* Display any submission errors here */}
-        {error && <p className="text-red-400 text-sm">{error}</p>}
+        {/* ERROR MESSAGE */}
+        {error && (
+          <div className="bg-red-50 dark:bg-red-500/10 border border-red-100 dark:border-red-500/20 rounded-xl p-3">
+            <p className="text-red-600 dark:text-red-400 text-xs font-semibold text-center">
+              {error}
+            </p>
+          </div>
+        )}
 
-        {/* Form action buttons */}
-        <div className="mt-6 flex justify-end gap-3">
+        {/* ACTION BUTTONS */}
+        <div className="pt-4 flex justify-end gap-4">
           <button
             type="button"
             onClick={onClose}
-            className="bg-zinc-700 hover:bg-zinc-600 font-semibold py-2 px-4 rounded-lg"
+            className="px-6 py-2.5 rounded-xl text-sm font-bold text-gray-600 dark:text-zinc-400 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors"
           >
             Cancel
           </button>
           <button
             type="submit"
             disabled={loading}
-            className="bg-cyan-600 hover:bg-cyan-700 font-semibold py-2 px-4 rounded-lg disabled:opacity-50"
+            className="px-8 py-2.5 rounded-xl text-sm font-bold bg-cyan-600 hover:bg-cyan-500 text-white shadow-lg shadow-cyan-600/20 dark:shadow-none transition-all active:scale-95 disabled:opacity-50"
           >
-            {loading ? "Saving..." : "Save Changes"}
+            {loading ? "Updating..." : "Save Changes"}
           </button>
         </div>
       </form>

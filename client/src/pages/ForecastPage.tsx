@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { Brain, TrendingUp, Loader, AlertTriangle } from "lucide-react";
-// Import API functions and types for forecasting and products
 import { getDemandForecast, getProducts } from "@/services/api";
 import type { ForecastDataPoint, Product } from "@/types";
-// Import Recharts components for the line chart
+
 import {
   ResponsiveContainer,
   LineChart,
@@ -15,176 +14,164 @@ import {
   Line,
 } from "recharts";
 
-/**
- * ForecastPage Component
- * Displays an AI-generated demand forecast for products.
- * Allows users to select a specific product or view the total demand forecast.
- */
 const ForecastPage: React.FC = () => {
-  // State for storing the fetched forecast data points
   const [forecastData, setForecastData] = useState<ForecastDataPoint[]>([]);
-  // State for managing loading indicators
   const [loading, setLoading] = useState(true);
-  // State for storing error messages
   const [error, setError] = useState<string | null>(null);
 
-  // State for the product dropdown selector
-  const [products, setProducts] = useState<Product[]>([]); // List of all available products
-  const [selectedProductId, setSelectedProductId] = useState<string>("all"); // Currently selected product ID ('all' for total)
+  const [products, setProducts] = useState<Product[]>([]);
+  const [selectedProductId, setSelectedProductId] = useState<string>("all");
   const [selectedProductName, setSelectedProductName] =
-    useState("All Products"); // Name of the selected product for the chart title
+    useState("All Products");
 
-  // Effect hook to fetch the list of all products for the dropdown on component mount
+  /* ---------------- LOAD PRODUCTS ---------------- */
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const response = await getProducts();
-        setProducts(response.data);
+        const res = await getProducts();
+        setProducts(res.data);
       } catch (err) {
-        console.error("Failed to fetch products:", err);
-        // Optionally set an error state or show a notification
+        console.error(err);
       }
     };
     fetchProducts();
-  }, []); // Empty dependency array ensures this runs only once
+  }, []);
 
-  // Effect hook to fetch the forecast data whenever the selectedProductId changes
+  /* ---------------- LOAD FORECAST ---------------- */
   useEffect(() => {
     const fetchForecast = async () => {
       setLoading(true);
       setError(null);
 
-      // Convert 'all' to 'undefined' for the API call to get the total forecast
       const productId =
         selectedProductId === "all" ? undefined : Number(selectedProductId);
 
       try {
-        const response = await getDemandForecast(productId);
-        // Assuming API response structure is { data: { forecast: [...] } }
-        setForecastData(response.data.forecast);
+        const res = await getDemandForecast(productId);
+        setForecastData(res.data.forecast);
       } catch (err) {
-        console.error("Failed to fetch forecast:", err);
-        setError("Could not load forecast data. Please try again.");
+        console.error(err);
+        setError("Could not load forecast data.");
       } finally {
         setLoading(false);
       }
     };
     fetchForecast();
-  }, [selectedProductId]); // Dependency array: re-runs when selectedProductId changes
+  }, [selectedProductId]);
 
-  // Handles changes in the product selection dropdown
+  /* ---------------- PRODUCT CHANGE ---------------- */
   const handleProductChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const newId = e.target.value;
-    setSelectedProductId(newId);
+    const id = e.target.value;
+    setSelectedProductId(id);
 
-    // Update the product name for the chart title based on the selection
-    if (newId === "all") {
-      setSelectedProductName("All Products");
-    } else {
-      const product = products.find((p) => p.id === Number(newId));
-      setSelectedProductName(product ? product.name : "Selected Product");
+    if (id === "all") setSelectedProductName("All Products");
+    else {
+      const p = products.find((x) => x.id === Number(id));
+      setSelectedProductName(p?.name || "Selected Product");
     }
   };
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Page Header */}
+      {/* ---------------- HEADER ---------------- */}
       <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-white flex items-center gap-3">
-            <Brain size={28} className="text-purple-400" />
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
+            <Brain size={28} className="text-purple-500 dark:text-purple-400" />
             AI Demand Forecast
           </h1>
-          <p className="text-sm text-zinc-400">
-            Predict future product demand using historical order data.
+
+          <p className="text-sm text-gray-600 dark:text-zinc-400">
+            Predict future product demand using historical data.
           </p>
         </div>
 
-        {/* Product Selector Dropdown */}
+        {/* PRODUCT SELECT */}
         <div className="w-full sm:w-64">
-          <label className="block text-xs font-medium text-zinc-400 mb-1">
-            Select Product to Forecast
+          <label className="block text-xs font-medium text-gray-600 dark:text-zinc-400 mb-1">
+            Select Product
           </label>
+
           <select
             value={selectedProductId}
             onChange={handleProductChange}
-            className="w-full bg-zinc-800 border border-zinc-700 text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-cyan-500"
+            className="w-full bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 text-gray-900 dark:text-white rounded-lg px-3 py-2 focus:ring-2 focus:ring-cyan-500 outline-none"
           >
-            <option value="all">All Products (Total Demand)</option>
-            {/* Populate dropdown with fetched products */}
-            {products.map((product) => (
-              <option key={product.id} value={product.id}>
-                {product.name} ({product.sku})
+            <option value="all">All Products (Total)</option>
+            {products.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.name} ({p.sku})
               </option>
             ))}
           </select>
         </div>
       </div>
 
-      {/* Chart Section */}
-      <div className="bg-zinc-900 rounded-lg shadow-lg p-6 border border-zinc-800">
-        <h2 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
-          <TrendingUp size={20} className="text-cyan-400" />
-          {/* Dynamic chart title */}
-          30-Day Forecast for: {selectedProductName}
+      {/* ---------------- CHART CARD ---------------- */}
+      <div className="bg-white dark:bg-zinc-900 rounded-xl shadow-sm p-6 border border-gray-200 dark:border-zinc-800">
+        <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+          <TrendingUp size={20} className="text-cyan-600 dark:text-cyan-400" />
+          30-Day Forecast: {selectedProductName}
         </h2>
 
-        {/* Chart Container - height is fixed */}
         <div className="h-[400px]">
-          {/* Conditional rendering based on loading/error state */}
           {loading ? (
-            <div className="flex items-center justify-center h-full text-zinc-500">
+            <div className="flex items-center justify-center h-full text-gray-500 dark:text-zinc-400">
               <Loader className="animate-spin h-8 w-8" />
               <span className="ml-3">Generating forecast...</span>
             </div>
           ) : error ? (
-            <div className="flex flex-col items-center justify-center h-full text-red-400">
+            <div className="flex flex-col items-center justify-center h-full text-red-500">
               <AlertTriangle size={32} />
               <p className="mt-3 font-semibold">{error}</p>
             </div>
           ) : (
-            // Render the chart when data is available
             <ResponsiveContainer width="100%" height="100%">
               <LineChart
                 data={forecastData}
-                margin={{ top: 5, right: 20, left: -20, bottom: 5 }} // Adjust margins for axis labels
+                margin={{ top: 5, right: 20, left: -20, bottom: 5 }}
               >
-                <CartesianGrid strokeDasharray="3 3" stroke="#3f3f46" />{" "}
-                {/* Grid lines */}
+                {/* GRID uses CSS variable */}
+                <CartesianGrid
+                  stroke="var(--grid-color)"
+                  strokeDasharray="3 3"
+                />
+
+                {/* AXIS uses CSS variable */}
                 <XAxis
                   dataKey="date"
-                  stroke="#a1a1aa"
+                  stroke="var(--axis-text)"
                   fontSize={12}
-                  // Format the date labels on the X-axis (e.g., "29/10")
                   tickFormatter={(str) => {
-                    const date = new Date(str);
-                    // Adjust for UTC if dates are coming as YYYY-MM-DD
-                    const utcDate = new Date(
-                      date.getUTCFullYear(),
-                      date.getUTCMonth(),
-                      date.getUTCDate()
-                    );
-                    return `${utcDate.getDate()}/${utcDate.getMonth() + 1}`;
+                    const d = new Date(str);
+                    return `${d.getDate()}/${d.getMonth() + 1}`;
                   }}
                 />
-                <YAxis stroke="#a1a1aa" fontSize={12} /> {/* Y-axis */}
+
+                <YAxis stroke="var(--axis-text)" fontSize={12} />
+
+                {/* TOOLTIP uses CSS variables */}
                 <Tooltip
-                  // Style the tooltip for the dark theme
                   contentStyle={{
-                    backgroundColor: "#18181b",
-                    borderColor: "#3f3f46",
-                    borderRadius: "0.5rem",
+                    backgroundColor: "var(--tooltip-bg)",
+                    border: "1px solid var(--tooltip-border)",
+                    borderRadius: "8px",
+                    color: "var(--tooltip-text)",
+                    fontWeight: 700,
                   }}
-                  labelStyle={{ color: "#ffffff" }} // Tooltip label color
+                  labelStyle={{ color: "var(--tooltip-text)" }}
                 />
-                <Legend /> {/* Chart legend */}
+
+                <Legend />
+
+                {/* LINE uses CSS variables */}
                 <Line
-                  type="monotone" // Smooth curve
-                  dataKey="value" // The data field for the Y-axis
-                  name="Forecasted Demand (Units)" // Legend label
-                  stroke="#22d3ee" // Line color (cyan)
+                  type="monotone"
+                  dataKey="value"
+                  name="Forecasted Demand"
+                  stroke="var(--line-color)"
                   strokeWidth={2}
-                  dot={false} // Hide dots on the line
+                  dot={{ r: 3, fill: "var(--line-dot)" }}
                 />
               </LineChart>
             </ResponsiveContainer>

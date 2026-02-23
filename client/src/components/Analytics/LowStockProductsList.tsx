@@ -27,29 +27,37 @@ export const LowStockProductsList: React.FC = () => {
   }, []);
 
   return (
-    <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200 h-full">
+    <div
+      className="
+        bg-white dark:bg-zinc-900
+        rounded-xl shadow-sm
+        p-6
+        border border-gray-200 dark:border-zinc-800
+        h-full
+      "
+    >
       {/* Title — ALWAYS BOLD */}
-      <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-        <AlertTriangle size={20} className="text-yellow-500" />
+      <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+        <AlertTriangle className="text-yellow-500" size={20} />
         Low Stock Items
       </h2>
 
       <div className="h-[300px] overflow-y-auto pr-2">
         {/* Loading */}
         {loading ? (
-          <div className="flex items-center justify-center h-full text-gray-600 font-bold">
+          <div className="flex items-center justify-center h-full text-gray-600 dark:text-zinc-400 font-bold">
             <Loader className="animate-spin mr-2" />
             Loading...
           </div>
         ) : error ? (
           /* Error — ALWAYS BOLD */
-          <div className="flex flex-col items-center justify-center h-full text-red-600 font-bold">
+          <div className="flex flex-col items-center justify-center h-full text-red-600 dark:text-red-400 font-bold">
             <AlertTriangle size={24} />
             <p className="mt-2 text-sm font-bold">{error}</p>
           </div>
         ) : products.length === 0 ? (
           /* Empty — ALWAYS BOLD */
-          <div className="flex items-center justify-center h-full text-gray-600 font-bold">
+          <div className="flex items-center justify-center h-full text-gray-600 dark:text-zinc-400 font-bold">
             All products are well-stocked
           </div>
         ) : (
@@ -58,15 +66,23 @@ export const LowStockProductsList: React.FC = () => {
             {products.map((product) => (
               <li
                 key={product.name}
-                className="flex justify-between items-center bg-gray-50 hover:bg-gray-100 transition p-3 rounded-lg border border-gray-200"
+                className="
+                  flex justify-between items-center
+                  bg-gray-50 dark:bg-zinc-800
+                  hover:bg-gray-100 dark:hover:bg-zinc-700
+                  transition
+                  p-3
+                  rounded-lg
+                  border border-gray-200 dark:border-zinc-700
+                "
               >
-                {/* Product Name — BOLD */}
-                <span className="text-sm font-bold text-gray-900">
+                {/* Product Name — ALWAYS BOLD */}
+                <span className="text-sm font-bold text-gray-900 dark:text-white">
                   {product.name}
                 </span>
 
-                {/* Quantity — BOLD */}
-                <span className="text-sm font-bold text-yellow-600">
+                {/* Quantity — ALWAYS BOLD */}
+                <span className="text-sm font-bold text-yellow-600 dark:text-yellow-400">
                   {product.stock_quantity} units
                 </span>
               </li>

@@ -22,12 +22,11 @@ interface OrderDetailsModalProps {
   order: Order | null;
 }
 
-const formatCurrency = (amount: number) => {
-  return new Intl.NumberFormat("en-IN", {
+const formatCurrency = (amount: number) =>
+  new Intl.NumberFormat("en-IN", {
     style: "currency",
     currency: "INR",
   }).format(amount);
-};
 
 export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
   isOpen,
@@ -44,11 +43,13 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
     value: React.ReactNode;
   }) => (
     <div className="flex flex-col gap-1">
-      <dt className="text-sm font-medium text-zinc-400 flex items-center gap-2">
+      <dt className="text-sm font-medium text-gray-500 dark:text-zinc-400 flex items-center gap-2">
         <Icon size={14} /> {label}
       </dt>
-      <dd className="text-base text-white font-semibold">
-        {value || <span className="text-zinc-500 italic">N/A</span>}
+      <dd className="text-base font-semibold text-gray-900 dark:text-white">
+        {value || (
+          <span className="text-gray-400 dark:text-zinc-500 italic">N/A</span>
+        )}
       </dd>
     </div>
   );
@@ -62,9 +63,8 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
     >
       {order && (
         <div className="flex flex-col gap-6">
-          {/* ---------------- CUSTOMER FULL DETAILS ---------------- */}
+          {/* ---------------- CUSTOMER DETAILS ---------------- */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Customer Name + Email */}
             <DetailItem
               icon={User}
               label="Customer Name"
@@ -77,26 +77,23 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
               value={order.user?.email}
             />
 
-            {/* Phone */}
             <DetailItem
               icon={Phone}
               label="Phone Number"
               value={order.address?.phone_number}
             />
 
-            {/* Address ID */}
             <DetailItem
               icon={Hash}
               label="Address ID Used"
               value={order.address?.id}
             />
 
-            {/* Full Address */}
             <DetailItem
               icon={MapPin}
               label="Delivery Address"
               value={
-                <div className="text-sm leading-6 text-zinc-300">
+                <div className="text-sm leading-6 text-gray-600 dark:text-zinc-300">
                   {order.address?.flat}, {order.address?.area},{" "}
                   {order.address?.landmark && `${order.address?.landmark}, `}
                   {order.address?.city}, {order.address?.state} -{" "}
@@ -105,33 +102,31 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
               }
             />
 
-            {/* Payment */}
             <DetailItem
               icon={IndianRupee}
               label="Payment"
               value={
                 <div className="flex flex-col gap-2 text-sm">
                   <PaymentStatusBadge status={order.payment_status} />
-                  <span className="text-zinc-300">{order.payment_method}</span>
+                  <span className="text-gray-600 dark:text-zinc-300">
+                    {order.payment_method}
+                  </span>
                 </div>
               }
             />
 
-            {/* Shipping Provider */}
             <DetailItem
               icon={Anchor}
               label="Shipping Provider"
               value={order.shipping_provider}
             />
 
-            {/* Tracking */}
             <DetailItem
               icon={Package}
               label="Tracking ID"
               value={<span className="font-mono">{order.tracking_id}</span>}
             />
 
-            {/* Vehicle */}
             <DetailItem
               icon={Truck}
               label="Assigned Vehicle"
@@ -142,19 +137,23 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
           </div>
 
           {/* ---------------- FINANCIAL SUMMARY ---------------- */}
-          <div className="border-t border-zinc-800 pt-6">
-            <h3 className="text-sm text-zinc-400 mb-3 flex items-center gap-2">
+          <div className="border-t border-gray-200 dark:border-zinc-800 pt-6">
+            <h3 className="text-sm text-gray-600 dark:text-zinc-400 mb-3 flex items-center gap-2">
               <Receipt size={14} /> Financial Summary
             </h3>
 
-            <div className="bg-zinc-800/50 rounded-lg p-4 space-y-2 text-sm">
+            <div className="bg-gray-50 dark:bg-zinc-800/50 rounded-lg p-4 space-y-2 text-sm">
               <div className="flex justify-between">
-                <span className="text-zinc-400">Subtotal</span>
-                <span>{formatCurrency(order.subtotal)}</span>
+                <span className="text-gray-600 dark:text-zinc-400">
+                  Subtotal
+                </span>
+                <span className="font-semibold">
+                  {formatCurrency(order.subtotal)}
+                </span>
               </div>
 
               {(order.discount_value || 0) > 0 && (
-                <div className="flex justify-between text-red-400">
+                <div className="flex justify-between text-red-500">
                   <span>
                     Discount (
                     {order.discount_type === "percentage"
@@ -174,20 +173,22 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
               )}
 
               <div className="flex justify-between">
-                <span className="text-zinc-400">GST</span>
+                <span className="text-gray-600 dark:text-zinc-400">GST</span>
                 <span>+{formatCurrency(order.total_gst)}</span>
               </div>
 
               <div className="flex justify-between">
-                <span className="text-zinc-400">Shipping</span>
+                <span className="text-gray-600 dark:text-zinc-400">
+                  Shipping
+                </span>
                 <span>+{formatCurrency(order.shipping_charges || 0)}</span>
               </div>
 
-              <div className="border-t border-zinc-700 my-2"></div>
+              <div className="border-t border-gray-200 dark:border-zinc-700 my-2"></div>
 
               <div className="flex justify-between font-bold text-lg">
                 <span>Total</span>
-                <span className="text-cyan-400">
+                <span className="text-cyan-600 dark:text-cyan-400">
                   {formatCurrency(order.total_amount)}
                 </span>
               </div>
@@ -195,8 +196,8 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
           </div>
 
           {/* ---------------- ITEMS ---------------- */}
-          <div className="border-t border-zinc-800 pt-4">
-            <h3 className="text-sm text-zinc-400 mb-2">
+          <div className="border-t border-gray-200 dark:border-zinc-800 pt-4">
+            <h3 className="text-sm text-gray-600 dark:text-zinc-400 mb-2">
               Items ({order.items.length})
             </h3>
 
@@ -204,15 +205,17 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
               {order.items.map((item) => (
                 <div
                   key={item.product.sku}
-                  className="flex justify-between bg-zinc-800/50 p-3 rounded-lg"
+                  className="flex justify-between bg-gray-50 dark:bg-zinc-800/50 p-3 rounded-lg"
                 >
                   <div>
-                    <div className="font-semibold">{item.product.name}</div>
-                    <div className="text-xs text-zinc-500">
+                    <div className="font-semibold text-gray-900 dark:text-white">
+                      {item.product.name}
+                    </div>
+                    <div className="text-xs text-gray-500 dark:text-zinc-500">
                       SKU: {item.product.sku}
                     </div>
                   </div>
-                  <div className="text-sm">
+                  <div className="text-sm text-gray-700 dark:text-zinc-300">
                     Qty: {item.quantity} × ₹{item.product.selling_price}
                   </div>
                 </div>
@@ -221,7 +224,7 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
           </div>
 
           {/* ---------------- FOOTER ---------------- */}
-          <div className="border-t border-zinc-800 pt-4 text-center text-xs text-zinc-500 flex justify-center items-center gap-2">
+          <div className="border-t border-gray-200 dark:border-zinc-800 pt-4 text-center text-xs text-gray-500 dark:text-zinc-500 flex justify-center items-center gap-2">
             <Clock size={12} />
             Order placed on {order.order_date}
           </div>

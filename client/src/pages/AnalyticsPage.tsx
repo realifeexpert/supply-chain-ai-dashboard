@@ -36,19 +36,23 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black/30 z-50 flex justify-center items-center p-4">
-      <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-sm border border-gray-200 text-center">
-        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-blue-50 mb-4">
-          <AlertTriangle className="h-6 w-6 text-blue-600" />
+      <div className="bg-white dark:bg-zinc-900 rounded-xl shadow-lg p-6 w-full max-w-sm border border-gray-200 dark:border-zinc-800 text-center">
+        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-blue-50 dark:bg-blue-900/30 mb-4">
+          <AlertTriangle className="h-6 w-6 text-blue-600 dark:text-blue-400" />
         </div>
 
-        <h2 className="text-xl font-bold text-gray-900 mb-2">{title}</h2>
+        <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+          {title}
+        </h2>
 
-        <p className="text-gray-600 font-medium mb-6">{message}</p>
+        <p className="text-gray-600 dark:text-zinc-400 font-medium mb-6">
+          {message}
+        </p>
 
         <div className="flex gap-4">
           <button
             onClick={onClose}
-            className="w-full bg-gray-100 hover:bg-gray-200 text-gray-900 font-semibold py-2 rounded-lg transition"
+            className="w-full bg-gray-100 dark:bg-zinc-800 hover:bg-gray-200 dark:hover:bg-zinc-700 text-gray-900 dark:text-white font-semibold py-2 rounded-lg transition"
           >
             Cancel
           </button>
@@ -160,10 +164,10 @@ const AnalyticsPage: React.FC = () => {
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between gap-4 items-center">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
               Analytics & Reports
             </h1>
-            <p className="text-gray-600 font-semibold">
+            <p className="text-gray-600 dark:text-zinc-400 font-semibold">
               Deep insights into your supply chain performance
             </p>
           </div>
@@ -202,9 +206,9 @@ const AnalyticsPage: React.FC = () => {
             </svg>
           </div>
         ) : !analyticsData ? (
-          <div className="bg-white rounded-xl shadow-sm p-8 text-center border border-gray-200">
+          <div className="bg-white dark:bg-zinc-900 rounded-xl shadow-sm p-8 text-center border border-gray-200 dark:border-zinc-800">
             <AlertTriangle className="mx-auto h-12 w-12 text-red-500" />
-            <p className="mt-4 text-lg font-bold text-red-600">
+            <p className="mt-4 text-lg font-bold text-red-600 dark:text-red-400">
               Could not load analytics data
             </p>
           </div>
@@ -215,24 +219,24 @@ const AnalyticsPage: React.FC = () => {
             <LowStockProductsList />
 
             {/* Top Products */}
-            <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-              <h2 className="text-xl font-bold text-gray-900 mb-4">
+            <div className="bg-white dark:bg-zinc-900 rounded-xl shadow-sm p-6 border border-gray-200 dark:border-zinc-800">
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
                 Top Selling Products
               </h2>
               <TopProductsChart data={analyticsData.top_selling_products} />
             </div>
 
             {/* Delivery Pie */}
-            <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-              <h2 className="text-xl font-bold text-gray-900 mb-4">
+            <div className="bg-white dark:bg-zinc-900 rounded-xl shadow-sm p-6 border border-gray-200 dark:border-zinc-800">
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
                 Delivery Status
               </h2>
               <DeliveryPieChart data={analyticsData.delivery_status} />
             </div>
 
             {/* Order Status */}
-            <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-              <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+            <div className="bg-white dark:bg-zinc-900 rounded-xl shadow-sm p-6 border border-gray-200 dark:border-zinc-800">
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
                 <ListChecks size={20} className="text-amber-500" />
                 Order Status Breakdown
               </h2>
@@ -240,14 +244,14 @@ const AnalyticsPage: React.FC = () => {
             </div>
 
             {/* Revenue */}
-            <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200 md:col-span-2 xl:col-span-3">
-              <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+            <div className="bg-white dark:bg-zinc-900 rounded-xl shadow-sm p-6 border border-gray-200 dark:border-zinc-800 md:col-span-2 xl:col-span-3">
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
                 <TrendingUp size={20} className="text-blue-600" />
                 Revenue Over Last 30 Days
               </h2>
 
               {revenueError ? (
-                <div className="text-red-600 font-semibold text-center">
+                <div className="text-red-600 dark:text-red-400 font-semibold text-center">
                   {revenueError}
                 </div>
               ) : (
