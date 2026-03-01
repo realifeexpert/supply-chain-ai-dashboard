@@ -29,9 +29,13 @@ export const HomePage: React.FC = () => {
     <div className="h-screen bg-background text-foreground flex flex-col overflow-hidden transition-colors duration-300">
       <Navbar />
 
-      <main className="flex-1 overflow-y-auto custom-scrollbar px-4 sm:px-6 py-6 sm:py-10">
-        <div className="container mx-auto">
-          {/* Loading State */}
+      {/* FIXED: 
+        1. pt-16 (64px) matches the Navbar height perfectly.
+        2. Removed all internal container padding-top.
+        3. Removed all grid padding-top.
+      */}
+      <main className="flex-1 overflow-y-auto custom-scrollbar pt-16 pb-24 md:pb-10">
+        <div className="container mx-auto px-4 sm:px-6">
           {loading ? (
             <div className="flex flex-col justify-center items-center h-[60vh]">
               <div className="h-10 w-10 border-4 border-muted border-t-cyan-500 rounded-full animate-spin mb-4" />
@@ -40,7 +44,7 @@ export const HomePage: React.FC = () => {
               </p>
             </div>
           ) : (
-            /* Product Grid */
+            /* Product Grid - Zero extra padding-top added here */
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {products.map((product: any) => (
                 <div key={product.id} className="flex justify-center">
@@ -50,7 +54,6 @@ export const HomePage: React.FC = () => {
             </div>
           )}
 
-          {/* Empty State */}
           {!loading && products.length === 0 && (
             <div className="flex flex-col items-center justify-center py-40 opacity-30">
               <div className="h-20 w-20 border-2 border-dashed border-border rounded-full flex items-center justify-center mb-6">
@@ -74,16 +77,15 @@ export const HomePage: React.FC = () => {
           background: transparent;
         }
         .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: var(--border);
+          background: hsl(var(--border));
           border-radius: 10px;
         }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: var(--ring);
+          background: hsl(var(--ring));
         }
-        /* Support for Firefox */
         main {
           scrollbar-width: thin;
-          scrollbar-color: var(--border) transparent;
+          scrollbar-color: hsl(var(--border)) transparent;
         }
       `}</style>
     </div>

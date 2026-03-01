@@ -21,7 +21,7 @@ from app.api.customer import address as customer_address_router
 
 
 # Create all database tables (if they don't exist) on app startup
-models.Base.metadata.create_all(bind=engine)
+
 
 app = FastAPI(title="Supply Chain AI Dashboard API")
 
