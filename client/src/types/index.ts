@@ -55,6 +55,13 @@ export interface ItemProductDetail {
 export interface ItemInOrder {
   quantity: number;
   product: ItemProductDetail;
+  product_id: number;
+  product_name: string;
+  product_sku: string;
+  unit_price: number;
+  gst_rate: number;
+  gst_amount: number;
+  subtotal: number;
 }
 
 /**

@@ -5,6 +5,7 @@ from sqlalchemy.orm import relationship
 from ..database import Base
 import enum
 import datetime
+from sqlalchemy import func
 
 
 # ---------------- ENUMS ---------------- #
@@ -63,6 +64,15 @@ class OrderItem(Base):
 
     order = relationship("Order", back_populates="items")
     product = relationship("Product")
+    
+    # --- ADDED FIELDS FOR TAX-INCLUSIVE SNAPSHOT ---
+    product_name = Column(String, nullable=True) # Added for permanent record
+    product_sku = Column(String, nullable=True)
+    unit_price = Column(Float, nullable=True)  # inclusive selling price at time of order
+    gst_rate = Column(Float, nullable=True)    # gst % at time of order
+    gst_amount = Column(Float, nullable=True)  # total gst for this line item
+    subtotal = Column(Float, nullable=True)    # taxable value (exclusive of gst)
+    # -----------------------------------------------
 
 
 class ProductImage(Base):
@@ -159,8 +169,7 @@ class Order(Base):
     __tablename__ = "orders"
 
     id = Column(Integer, primary_key=True, index=True)
-    order_date = Column(DateTime, default=datetime.datetime.utcnow)
-
+    order_date = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     # User link
     user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     user = relationship("User", back_populates="orders")

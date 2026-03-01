@@ -206,19 +206,29 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
             <div className="space-y-3">
               {order.items.map((item) => (
                 <div
-                  key={item.product.sku}
-                  className="flex justify-between bg-gray-50 dark:bg-zinc-800/50 p-3 rounded-lg"
+                  // Use product_id for the key to ensure uniqueness even if SKU changes
+                  key={item.product_id || item.product_sku}
+                  className="flex justify-between items-center bg-gray-50 dark:bg-zinc-800/50 p-3 rounded-lg"
                 >
-                  <div>
+                  <div className="flex-1">
                     <div className="font-semibold text-gray-900 dark:text-white">
-                      {item.product.name}
+                      {/* USE SNAPSHOT NAME: Corrected from item.product.name */}
+                      {item.product_name || item.product?.name}
                     </div>
                     <div className="text-xs text-gray-500 dark:text-zinc-500">
-                      SKU: {item.product.sku}
+                      {/* USE SNAPSHOT SKU: Corrected from item.product.sku */}
+                      SKU: {item.product_sku || item.product?.sku}
                     </div>
                   </div>
-                  <div className="text-sm text-gray-700 dark:text-zinc-300">
-                    Qty: {item.quantity} × ₹{item.product.selling_price}
+
+                  <div className="text-right">
+                    <div className="text-sm font-medium text-gray-700 dark:text-zinc-300">
+                      Qty: {item.quantity} × {formatCurrency(item.unit_price)}
+                    </div>
+                    {/* Optional: Show line item total if you want */}
+                    <div className="text-xs text-gray-400">
+                      Total: {formatCurrency(item.quantity * item.unit_price)}
+                    </div>
                   </div>
                 </div>
               ))}
@@ -226,9 +236,25 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
           </div>
 
           {/* ---------------- FOOTER ---------------- */}
-          <div className="border-t border-gray-200 dark:border-zinc-800 pt-4 text-center text-xs text-gray-500 dark:text-zinc-500 flex justify-center items-center gap-2">
-            <Clock size={12} />
-            Order placed on {order.order_date}
+          <div className="border-t border-gray-200 dark:border-zinc-800 pt-4 text-center text-xs text-gray-500 dark:text-zinc-500 flex flex-col justify-center items-center gap-1">
+            <div className="flex items-center gap-2">
+              <Clock size={12} />
+              <span>
+                Order placed on{" "}
+                {new Date(order.order_date).toLocaleString("en-IN", {
+                  day: "2-digit",
+                  month: "long",
+                  year: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                  hour12: true,
+                  timeZone: "Asia/Kolkata", // Forces the correct India time display
+                })}
+              </span>
+            </div>
+            <div className="text-[10px] uppercase tracking-wider opacity-60">
+              Transaction ID: {order.id}-{new Date(order.order_date).getTime()}
+            </div>
           </div>
         </div>
       )}

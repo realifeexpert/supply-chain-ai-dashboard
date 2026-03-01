@@ -187,6 +187,14 @@ class ItemProductDetailWithPrice(BaseModel):
 
 class ItemInOrderResponse(BaseModel):
     quantity: int
+    # --- ADDED SNAPSHOT FIELDS TO MATCH MODEL ---
+    product_name: Optional[str] = None # From snapshot
+    product_sku: Optional[str] = None  # From snapshot
+    unit_price: Optional[float] = None
+    gst_rate: Optional[float] = None
+    gst_amount: Optional[float] = None
+    subtotal: Optional[float] = None
+    # --------------------------------------------
     product: ItemProductDetailWithPrice
 
     class Config:

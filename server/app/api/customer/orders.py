@@ -127,7 +127,16 @@ async def place_order(
             order_item = models.OrderItem(
                 order_id=new_order.id,
                 product_id=product.id,
-                quantity=item.quantity
+                quantity=item.quantity,
+
+                  # Identity Snapshot
+                product_name=product.name,       
+                product_sku=product.sku,    
+                   # Financial Snapshot
+                unit_price=price_including_gst,
+                gst_rate=gst_rate,
+                gst_amount=round(item_gst, 2),
+                subtotal=round(item_subtotal, 2)
             )
 
             db.add(order_item)
