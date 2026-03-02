@@ -47,7 +47,7 @@ const AddUserModal: React.FC<AddUserModalProps> = ({
 
   // Generic change handler for form inputs
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
   ) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
@@ -64,7 +64,8 @@ const AddUserModal: React.FC<AddUserModalProps> = ({
       setFormData({ name: "", email: "", password: "", role: "user" }); // Reset form
     } catch (err: any) {
       setError(
-        err.response?.data?.detail || "Failed to create user. Please try again."
+        err.response?.data?.detail ||
+          "Failed to create user. Please try again.",
       );
     } finally {
       setLoading(false);
@@ -183,11 +184,12 @@ const EditUserModal: React.FC<EditUserModalProps> = ({
   const [loading, setLoading] = useState(false);
 
   // Populate the form with the selected user's data when the modal opens
+  // Inside EditUserModal component
   useEffect(() => {
     if (user) {
       setFormData({
-        name: user.name,
-        email: user.email,
+        name: user.name || "", // Added fallback
+        email: user.email || "", // Added fallback
         role: user.role,
         is_active: user.is_active,
       });
@@ -196,7 +198,7 @@ const EditUserModal: React.FC<EditUserModalProps> = ({
 
   // Generic change handler, supports text inputs, selects, and checkboxes
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
   ) => {
     const { name, value, type } = e.target;
     const isCheckbox = type === "checkbox";
@@ -379,7 +381,7 @@ const RoleBadge: React.FC<{ role: UserRole }> = ({ role }) => {
     <span
       className={cn(
         "px-2 py-1 text-xs font-medium rounded-full",
-        roleMap[role]
+        roleMap[role],
       )}
     >
       {role.charAt(0).toUpperCase() + role.slice(1)}
@@ -396,7 +398,7 @@ const StatusIndicator: React.FC<{ isActive: boolean }> = ({ isActive }) => {
       <span
         className={cn(
           "h-2 w-2 rounded-full",
-          isActive ? "bg-green-500" : "bg-zinc-500"
+          isActive ? "bg-green-500" : "bg-zinc-500",
         )}
       ></span>
       <span className={isActive ? "text-green-400" : "text-zinc-400"}>
@@ -445,11 +447,14 @@ const UsersPage: React.FC = () => {
   }, []);
 
   // Filter users based on search term (name or email)
-  const filteredUsers = users.filter(
-    (user) =>
-      user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredUsers = users.filter((user) => {
+    // We use lowercase fallback to empty strings to prevent crashes
+    const name = user.name?.toLowerCase() || "";
+    const email = user.email?.toLowerCase() || "";
+    const search = searchTerm.toLowerCase();
+
+    return name.includes(search) || email.includes(search);
+  });
 
   // Callback for when a new user is added
   const handleUserAdded = (newUser: User) => {
