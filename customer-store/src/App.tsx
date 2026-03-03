@@ -4,15 +4,16 @@ import {
   Route,
   Navigate,
 } from "react-router-dom";
+
 import { HomePage } from "./pages/HomePage";
 import { CheckoutPage } from "./pages/CheckoutPage";
-import { AuthPage } from "./pages/AuthPage"; // 👈 Ensure this is imported!
+import { AuthPage } from "./pages/AuthPage";
 import { OrderHistoryPage } from "./pages/OrderHistoryPage";
+import { ProductDetailsPage } from "./pages/ProductDetailsPage"; // Added
 
-// The ProtectedRoute must be defined OUTSIDE the App component or in a separate file
+// Protected Route Component
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const token = localStorage.getItem("token");
-  // If no token, redirect to auth, but keep the current location in state to redirect back
   return token ? <>{children}</> : <Navigate to="/auth" replace />;
 };
 
@@ -20,8 +21,16 @@ function App() {
   return (
     <Router>
       <Routes>
+        {/* Home */}
         <Route path="/" element={<HomePage />} />
+
+        {/* Product Details */}
+        <Route path="/product/:id" element={<ProductDetailsPage />} />
+
+        {/* Auth */}
         <Route path="/auth" element={<AuthPage />} />
+
+        {/* Order History - Protected */}
         <Route
           path="/my-orders"
           element={
@@ -30,7 +39,8 @@ function App() {
             </ProtectedRoute>
           }
         />
-        {/* Wrap Checkout with ProtectedRoute */}
+
+        {/* Checkout - Protected */}
         <Route
           path="/checkout"
           element={
@@ -39,6 +49,9 @@ function App() {
             </ProtectedRoute>
           }
         />
+
+        {/* Optional: Catch all route */}
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>
   );

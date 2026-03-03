@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { ShoppingCart } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import type { Product } from "@/types/index";
 import { ProductMedia } from "./ProductMedia";
 import { useCartStore } from "@/store/useCartStore";
@@ -9,6 +10,8 @@ interface ProductCardProps {
 }
 
 export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
+  const navigate = useNavigate();
+
   const addItem = useCartStore((state) => state.addItem);
   const cartItems = useCartStore((state) => state.items);
   const [activeIndex, setActiveIndex] = useState(0);
@@ -21,9 +24,16 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const isOut = stock <= 0;
   const maxReached = quantity >= stock;
 
+  const handleNavigate = () => {
+    navigate(`/product/${product.id}`);
+  };
+
   return (
-    <div className="group relative flex flex-col h-full bg-card dark:bg-card rounded-[2.5rem] border border-border transition-all duration-500 hover:border-yellow-500/40 shadow-2xl overflow-hidden">
-      {/* MEDIA SECTION - COMPLETELY FLUSH */}
+    <div
+      onClick={handleNavigate}
+      className="group relative flex flex-col h-full bg-card dark:bg-card rounded-[2.5rem] border border-border transition-all duration-500 hover:border-yellow-500/40 shadow-2xl overflow-hidden cursor-pointer"
+    >
+      {/* MEDIA SECTION */}
       <div className="relative aspect-square w-full overflow-hidden bg-muted">
         <div className="absolute inset-0 transition-transform duration-1000 group-hover:scale-105 h-full w-full object-cover">
           <ProductMedia
@@ -32,7 +42,6 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           />
         </div>
 
-        {/* IMAGE SWITCHING ZONES */}
         {images.length > 1 && (
           <div className="absolute inset-0 z-30 flex">
             {images.map((_, idx) => (
@@ -45,7 +54,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           </div>
         )}
 
-        {/* IN-CART BADGE */}
+        {/* IN CART BADGE */}
         <div className="absolute top-5 left-5 z-40">
           {!isOut && quantity > 0 && (
             <div className="bg-cyan-500 px-3 py-1.5 rounded-full text-[10px] font-black text-white dark:text-black uppercase tracking-widest flex items-center gap-2 shadow-xl">
@@ -67,16 +76,18 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           </p>
         </div>
 
-        {/* DESCRIPTION */}
         <p className="text-xs leading-relaxed text-muted-foreground mb-8 line-clamp-2 min-h-10">
           {product.description ||
             "Experience top-tier performance and premium design in every detail."}
         </p>
 
-        {/* FULL WIDTH YELLOW BUTTON */}
+        {/* BUTTON */}
         <button
           disabled={isOut || maxReached}
-          onClick={() => addItem(product)}
+          onClick={(e) => {
+            e.stopPropagation(); // IMPORTANT: prevent navigation
+            addItem(product);
+          }}
           className={`relative w-full h-12 flex items-center justify-center rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] transition-all duration-300 mt-auto
             ${
               isOut || maxReached
