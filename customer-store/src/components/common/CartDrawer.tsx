@@ -115,9 +115,13 @@ export const CartDrawer = () => {
                     </div>
 
                     <p className="text-[11px] font-bold text-muted-foreground mt-1">
-                      {item.quantity} × ₹{item.selling_price.toLocaleString()} =
+                      {item.quantity} × ₹
+                      {item.selling_price.toLocaleString("en-IN")} =
                       <span className="text-cyan-600 dark:text-cyan-400 ml-1 font-black">
-                        ₹{(item.quantity * item.selling_price).toLocaleString()}
+                        ₹
+                        {(item.quantity * item.selling_price).toLocaleString(
+                          "en-IN",
+                        )}
                       </span>
                     </p>
 
@@ -170,7 +174,7 @@ export const CartDrawer = () => {
                   Total Payable
                 </span>
                 <span className="text-2xl font-black text-foreground tracking-tighter">
-                  ₹{getTotalPrice().toLocaleString()}
+                  ₹{getTotalPrice().toLocaleString("en-IN")}
                 </span>
               </div>
             </div>

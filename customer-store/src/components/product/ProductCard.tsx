@@ -72,7 +72,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
             {product.name}
           </h3>
           <p className="text-xl font-black text-foreground italic tracking-tighter shrink-0">
-            ₹{product.selling_price.toLocaleString()}
+            ₹{product.selling_price.toLocaleString("en-IN")}
           </p>
         </div>
 

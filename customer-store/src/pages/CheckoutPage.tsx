@@ -137,11 +137,14 @@ export const CheckoutPage: React.FC = () => {
                         </p>
                         <p className="text-[10px] font-black text-muted-foreground uppercase italic">
                           Qty: {item.quantity} × ₹
-                          {item.selling_price.toLocaleString()}
+                          {item.selling_price.toLocaleString("en-IN")}
                         </p>
                       </div>
                       <span className="text-sm font-black text-foreground italic">
-                        ₹{(item.selling_price * item.quantity).toLocaleString()}
+                        ₹
+                        {(item.selling_price * item.quantity).toLocaleString(
+                          "en-IN",
+                        )}
                       </span>
                     </div>
 
@@ -172,7 +175,7 @@ export const CheckoutPage: React.FC = () => {
                   </span>
                   <div className="text-right">
                     <span className="block text-3xl font-black text-foreground italic tracking-tighter">
-                      ₹{totalAmount.toLocaleString()}
+                      ₹{totalAmount.toLocaleString("en-IN")}
                     </span>
                   </div>
                 </div>
