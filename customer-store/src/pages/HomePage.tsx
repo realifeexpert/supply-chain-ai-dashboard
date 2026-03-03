@@ -3,15 +3,26 @@ import { getStorefrontProducts } from "@/services/api";
 import { ProductCard } from "@/components/product/ProductCard";
 import { Navbar } from "@/components/common/Navbar";
 import { useInventorySocket } from "@/hooks/useInventorySocket";
+import { useCartStore } from "@/store/useCartStore"; // 1. Import the store
 
 export const HomePage: React.FC = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // 2. Get the syncPrices action from your store
+  const syncPrices = useCartStore((state) => state.syncPrices);
+
   const fetchProducts = async () => {
     try {
       const response = await getStorefrontProducts();
-      setProducts(response.data);
+      const latestData = response.data;
+
+      setProducts(latestData); // Updates the UI Grid
+
+      // 3. 🔥 REAL-TIME SYNC: Update the CartDrawer and Persisted Prices
+      // This ensures that if the admin changed the price from 3500 to 3700,
+      // the items already in the user's cart get the new price instantly.
+      syncPrices(latestData);
     } catch (error) {
       console.error("Failed to fetch products:", error);
     } finally {
@@ -19,6 +30,8 @@ export const HomePage: React.FC = () => {
     }
   };
 
+  // This hook listens to your Socket.io/WebSocket server
+  // When an admin updates ANY product, it triggers fetchProducts()
   useInventorySocket(fetchProducts);
 
   useEffect(() => {
@@ -29,11 +42,6 @@ export const HomePage: React.FC = () => {
     <div className="h-screen bg-background text-foreground flex flex-col overflow-hidden transition-colors duration-300">
       <Navbar />
 
-      {/* FIXED: 
-        1. pt-16 (64px) matches the Navbar height perfectly.
-        2. Removed all internal container padding-top.
-        3. Removed all grid padding-top.
-      */}
       <main className="flex-1 overflow-y-auto custom-scrollbar pt-16 pb-24 md:pb-10">
         <div className="container mx-auto px-4 sm:px-6">
           {loading ? (
@@ -44,8 +52,7 @@ export const HomePage: React.FC = () => {
               </p>
             </div>
           ) : (
-            /* Product Grid - Zero extra padding-top added here */
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 pt-6">
               {products.map((product: any) => (
                 <div key={product.id} className="flex justify-center">
                   <ProductCard product={product} />

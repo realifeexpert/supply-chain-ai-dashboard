@@ -12,6 +12,7 @@ import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 
 export const CartDrawer = () => {
+  // We just need the items and actions; the HomePage handles the syncing
   const { items, deleteProduct, updateQuantity, getTotalPrice } =
     useCartStore();
   const navigate = useNavigate();
@@ -52,7 +53,6 @@ export const CartDrawer = () => {
       </SheetTrigger>
 
       <SheetContent className="bg-background border-l border-border text-foreground w-full sm:max-w-md flex flex-col p-0 transition-colors duration-300">
-        {/* HEADER */}
         <SheetHeader className="p-6 border-b border-border">
           <div className="flex items-center justify-between">
             <SheetTitle className="text-foreground text-xl font-black uppercase tracking-tight">
@@ -64,7 +64,6 @@ export const CartDrawer = () => {
           </div>
         </SheetHeader>
 
-        {/* ITEMS */}
         <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4 no-scrollbar">
           {items.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center text-center opacity-30">
@@ -85,7 +84,6 @@ export const CartDrawer = () => {
                   key={item.id}
                   className="flex gap-4 p-3 rounded-2xl bg-secondary/30 border border-border hover:border-cyan-500/30 transition-all duration-300"
                 >
-                  {/* IMAGE */}
                   <div className="relative h-20 w-20 shrink-0 bg-muted rounded-xl overflow-hidden border border-border">
                     <img
                       src={currentImage}
@@ -99,13 +97,11 @@ export const CartDrawer = () => {
                     )}
                   </div>
 
-                  {/* INFO */}
                   <div className="flex-1 flex flex-col">
                     <div className="flex justify-between items-start">
                       <h4 className="font-bold text-xs uppercase text-foreground line-clamp-1 tracking-tight">
                         {item.name}
                       </h4>
-
                       <button
                         onClick={() => deleteProduct(item.id)}
                         className="text-muted-foreground hover:text-destructive transition-colors p-1"
@@ -125,7 +121,6 @@ export const CartDrawer = () => {
                       </span>
                     </p>
 
-                    {/* QUANTITY CONTROLS */}
                     <div className="flex items-center justify-between mt-auto">
                       <div className="flex items-center bg-background rounded-lg border border-border overflow-hidden">
                         <button
@@ -142,11 +137,9 @@ export const CartDrawer = () => {
                             <Minus size={12} />
                           )}
                         </button>
-
                         <span className="w-8 text-center text-xs font-black text-foreground">
                           {item.quantity}
                         </span>
-
                         <button
                           disabled={item.quantity >= item.stock_quantity}
                           onClick={() =>
@@ -165,7 +158,6 @@ export const CartDrawer = () => {
           )}
         </div>
 
-        {/* FOOTER */}
         {items.length > 0 && (
           <div className="p-6 border-t border-border bg-secondary/20">
             <div className="flex justify-between mb-5">
@@ -178,7 +170,6 @@ export const CartDrawer = () => {
                 </span>
               </div>
             </div>
-
             <button
               disabled={hasOutOfStock}
               onClick={() => navigate("/checkout")}

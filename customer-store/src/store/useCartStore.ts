@@ -9,8 +9,9 @@ interface CartItem extends Product {
 interface CartState {
   items: CartItem[];
   addItem: (product: Product) => void;
-  removeItem: (productId: number) => void; // Keeps reducing by 1
-  deleteProduct: (productId: number) => void; // New: Wipes the whole item
+  syncPrices: (latestProducts: Product[]) => void; // New: Action to sync data
+  removeItem: (productId: number) => void;
+  deleteProduct: (productId: number) => void;
   updateQuantity: (productId: number, quantity: number) => void;
   clearCart: () => void;
   getTotalPrice: () => number;
@@ -21,9 +22,38 @@ export const useCartStore = create<CartState>()(
     (set, get) => ({
       items: [],
 
+      // SYNC LOGIC: Updates persisted items with fresh data from the API
+      syncPrices: (latestProducts) => {
+        const currentItems = get().items;
+        if (currentItems.length === 0) return;
+
+        const updatedItems = currentItems.map((item) => {
+          // Find the matching product in the fresh data array
+          const latestProduct = latestProducts.find((p) => p.id === item.id);
+
+          if (latestProduct) {
+            return {
+              ...item,
+              // Update all dynamic fields while keeping the cart quantity
+              name: latestProduct.name,
+              selling_price: latestProduct.selling_price,
+              stock_quantity: latestProduct.stock_quantity,
+              images: latestProduct.images,
+              sku: latestProduct.sku,
+              // Add other fields like gst_rate if they exist in your type
+              gst_rate: (latestProduct as any).gst_rate || 0,
+            };
+          }
+          return item;
+        });
+
+        set({ items: updatedItems });
+      },
+
       addItem: (product) => {
         const items = get().items;
         const existingItem = items.find((item) => item.id === product.id);
+
         if (product.stock_quantity <= 0) return;
 
         if (existingItem) {
@@ -40,7 +70,6 @@ export const useCartStore = create<CartState>()(
         }
       },
 
-      // Logic for the Minus (-) button
       removeItem: (productId) => {
         const items = get().items;
         const existingItem = items.find((item) => item.id === productId);
@@ -59,7 +88,6 @@ export const useCartStore = create<CartState>()(
         }
       },
 
-      // NEW: Logic for the Trash Icon (Direct Delete)
       deleteProduct: (productId) => {
         set({
           items: get().items.filter((item) => item.id !== productId),
@@ -92,6 +120,10 @@ export const useCartStore = create<CartState>()(
           0,
         ),
     }),
-    { name: "shopping-cart" },
+    {
+      name: "shopping-cart",
+      // Optional: Ensure drawer state isn't persisted if you add it later
+      partialize: (state) => ({ items: state.items }),
+    },
   ),
 );

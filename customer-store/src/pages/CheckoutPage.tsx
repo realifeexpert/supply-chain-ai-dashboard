@@ -1,9 +1,10 @@
-import React, { useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { useCartStore } from "@/store/useCartStore";
 import { Navbar } from "@/components/common/Navbar";
 import { useNavigate } from "react-router-dom";
-import { placeOrder } from "@/services/api";
+import { placeOrder, getStorefrontProducts } from "@/services/api"; // Added getStorefrontProducts
 import { AddressSelector } from "@/components/checkout/AddressSelector";
+import { useInventorySocket } from "@/hooks/useInventorySocket"; // 1. Import the socket hook
 import {
   ShieldCheck,
   Truck,
@@ -14,10 +15,34 @@ import {
 import { cn } from "@/lib/utils";
 
 export const CheckoutPage: React.FC = () => {
-  const { items, getTotalPrice, clearCart } = useCartStore();
+  // Added syncPrices to the destructuring
+  const { items, getTotalPrice, clearCart, syncPrices } = useCartStore();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [selectedAddress, setSelectedAddress] = useState<any>(null);
+
+  // 2. Define the sync function wrapped in useCallback
+  // This ensures the socket doesn't create infinite loops
+  const validateAndSync = useCallback(async () => {
+    try {
+      const response = await getStorefrontProducts();
+      if (response.data) {
+        syncPrices(response.data);
+      }
+    } catch (error) {
+      console.error("Real-time price validation failed:", error);
+    }
+  }, [syncPrices]);
+
+  useInventorySocket(validateAndSync);
+
+  useEffect(() => {
+    if (items.length > 0) {
+      validateAndSync();
+    } else {
+      navigate("/");
+    }
+  }, [items.length, validateAndSync, navigate]);
 
   const hasOutOfStock = items.some((item) => item.stock_quantity <= 0);
   const totalAmount = getTotalPrice();
