@@ -17,6 +17,7 @@ const formatCurrency = (amount: number) =>
   new Intl.NumberFormat("en-IN", {
     style: "currency",
     currency: "INR",
+    minimumFractionDigits: 0, // Hides .00
     maximumFractionDigits: 2,
   }).format(amount);
 
@@ -108,7 +109,7 @@ export const ProductDetailsPage: React.FC = () => {
         </button>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16">
-          {/* LEFT: IMAGE GALLERY - NO CARD, SMALLER IMAGE */}
+          {/* LEFT: IMAGE GALLERY */}
           <div className="flex flex-col gap-4">
             <div className="relative aspect-square overflow-hidden flex items-center justify-center p-6 sm:p-12">
               <img
