@@ -11,9 +11,15 @@ import {
   Search,
   Users,
   TriangleAlert,
-  Edit3,
   ChevronRight,
 } from "lucide-react";
+import { clsx, type ClassValue } from "clsx";
+import { twMerge } from "tailwind-merge";
+
+/** Utility for tailwind class merging */
+function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
+}
 
 export const AdminManagement = () => {
   const [email, setEmail] = useState("");
@@ -25,10 +31,9 @@ export const AdminManagement = () => {
   const [searchTerm, setSearchTerm] = useState("");
 
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedAdmin, setSelectedAdmin] = useState<any>(null);
 
-  // 🛠️ FETCH: Always pull fresh data to ensure we see the latest roles
+  // 🛠️ FETCH: Always pull fresh data
   const fetchAuthorizedAdmins = async () => {
     const { data, error } = await supabase
       .from("authorized_admins")
@@ -41,6 +46,23 @@ export const AdminManagement = () => {
   useEffect(() => {
     fetchAuthorizedAdmins();
   }, []);
+
+  // 🛠️ INLINE UPDATE: Direct role change with icon usage
+  const handleInlineUpdate = async (targetEmail: string, newLevel: string) => {
+    setLoading(true);
+
+    const { error } = await supabase
+      .from("authorized_admins")
+      .update({ access_level: newLevel })
+      .eq("email", targetEmail);
+
+    if (error) {
+      alert("Failed to update access level.");
+    } else {
+      fetchAuthorizedAdmins();
+    }
+    setLoading(false);
+  };
 
   const handleAuthorize = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,27 +79,6 @@ export const AdminManagement = () => {
     setLoading(false);
   };
 
-  // 🛠️ UPDATE: The Sync Trigger will automatically update 'admin_profiles'
-  const handleUpdateAccess = async () => {
-    if (!selectedAdmin) return;
-    setLoading(true);
-
-    const { error } = await supabase
-      .from("authorized_admins")
-      .update({ access_level: selectedAdmin.access_level })
-      .eq("email", selectedAdmin.email);
-
-    if (error) {
-      alert("Failed to update access level.");
-    } else {
-      // Small delay to allow the DB Trigger to finish syncing
-      setTimeout(() => fetchAuthorizedAdmins(), 500);
-      setIsEditModalOpen(false);
-    }
-    setLoading(false);
-  };
-
-  // 🛠️ DELETE: The Sync Trigger will set their profile to 'none' automatically
   const removeAuthorization = async () => {
     if (!selectedAdmin) return;
     setLoading(true);
@@ -90,7 +91,6 @@ export const AdminManagement = () => {
     if (error) {
       alert("Failed to revoke permissions.");
     } else {
-      // Filter local state immediately for a fast UI feel
       setAuthorizedList((prev) =>
         prev.filter((a) => a.email !== selectedAdmin.email),
       );
@@ -133,7 +133,7 @@ export const AdminManagement = () => {
             <button
               onClick={removeAuthorization}
               disabled={loading}
-              className="flex-1 h-11 rounded-lg font-semibold bg-red-600 text-white hover:bg-red-700 text-sm transition-all shadow-sm disabled:opacity-50"
+              className="flex-1 h-11 rounded-lg font-semibold bg-red-600 text-white hover:bg-red-700 text-sm transition-all shadow-sm"
             >
               {loading ? "Revoking..." : "Confirm Revocation"}
             </button>
@@ -141,52 +141,7 @@ export const AdminManagement = () => {
         </div>
       </ModalLayout>
 
-      {/* EDIT MODAL */}
-      <ModalLayout
-        isOpen={isEditModalOpen}
-        onClose={() => setIsEditModalOpen(false)}
-        title="Modify Access Level"
-        size="max-w-md"
-      >
-        <div className="space-y-6">
-          <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">
-              Target Identity
-            </label>
-            <p className="text-sm font-bold text-zinc-900 dark:text-white">
-              {selectedAdmin?.email}
-            </p>
-          </div>
-          <div className="space-y-2">
-            <label className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">
-              Permission Scope
-            </label>
-            <select
-              value={selectedAdmin?.access_level}
-              onChange={(e) =>
-                setSelectedAdmin({
-                  ...selectedAdmin,
-                  access_level: e.target.value,
-                })
-              }
-              className="w-full h-11 px-3 rounded-lg bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-sm font-medium focus:ring-2 ring-cyan-500/10 outline-none"
-            >
-              <option value="view_only">View Only (Observer)</option>
-              <option value="full_access">Full Access (Admin)</option>
-            </select>
-          </div>
-          <button
-            onClick={handleUpdateAccess}
-            disabled={loading}
-            className="w-full h-11 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 font-bold rounded-lg hover:opacity-90 transition-all text-sm uppercase tracking-widest disabled:opacity-50"
-          >
-            {loading ? "Updating..." : "Update Access"}
-          </button>
-        </div>
-      </ModalLayout>
-
       <div className="max-w-6xl mx-auto space-y-10">
-        {/* HEADER */}
         <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
           <div className="space-y-1">
             <div className="flex items-center gap-2 text-cyan-600 dark:text-cyan-500 font-bold text-xs uppercase tracking-[0.2em] mb-2">
@@ -195,12 +150,9 @@ export const AdminManagement = () => {
             <h1 className="text-3xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
               Admin Access Management
             </h1>
-            <p className="text-zinc-500 dark:text-zinc-400 text-sm">
-              Control internal permissions and administrative whitelisting.
-            </p>
           </div>
 
-          <div className="flex items-center gap-4 bg-zinc-50 dark:bg-zinc-900 px-5 py-4 rounded-xl border border-zinc-200 dark:border-zinc-800">
+          <div className="flex items-center gap-4 bg-zinc-50 dark:bg-zinc-900 px-5 py-4 rounded-xl border border-zinc-200 dark:border-zinc-800 shadow-sm">
             <div className="text-right">
               <p className="text-[10px] uppercase font-bold text-zinc-400 tracking-widest">
                 Active Accounts
@@ -235,7 +187,7 @@ export const AdminManagement = () => {
                       placeholder="admin@supplychain.ai"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="w-full h-11 pl-10 pr-4 rounded-lg bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 focus:border-cyan-500 transition-all text-sm font-medium text-zinc-900 dark:text-white outline-none"
+                      className="w-full h-11 pl-10 pr-4 rounded-lg bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 focus:border-cyan-500 transition-all text-sm font-medium outline-none"
                       required
                     />
                   </div>
@@ -251,7 +203,7 @@ export const AdminManagement = () => {
                     className="w-full h-11 px-3 rounded-lg bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-sm font-medium outline-none focus:border-cyan-500"
                   >
                     <option value="view_only">Read-Only Observer</option>
-                    <option value="full_access">Full Access (Admin)</option>
+                    <option value="full_access">Full System Admin</option>
                   </select>
                 </div>
 
@@ -289,10 +241,10 @@ export const AdminManagement = () => {
               {filteredAdmins.map((admin) => (
                 <div
                   key={admin.email}
-                  className="group flex items-center justify-between p-4 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl hover:border-zinc-400 dark:hover:border-zinc-600 transition-all duration-200"
+                  className="group flex items-center justify-between p-4 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl hover:border-zinc-400 transition-all duration-200"
                 >
                   <div className="flex items-center gap-4">
-                    <div className="h-10 w-10 rounded-lg bg-zinc-50 dark:bg-zinc-800 border border-zinc-100 dark:border-zinc-700 flex items-center justify-center group-hover:bg-cyan-500/10 transition-colors">
+                    <div className="h-10 w-10 rounded-lg bg-zinc-50 dark:bg-zinc-800 border border-zinc-100 flex items-center justify-center group-hover:bg-cyan-500/10 transition-colors">
                       <Mail
                         size={18}
                         className="text-zinc-400 group-hover:text-cyan-600 transition-colors"
@@ -302,30 +254,43 @@ export const AdminManagement = () => {
                       <p className="font-semibold text-sm text-zinc-900 dark:text-zinc-100 leading-none">
                         {admin.email}
                       </p>
-                      <div className="flex items-center gap-2 mt-1.5">
-                        {admin.access_level === "full_access" ? (
-                          <span className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-orange-50 dark:bg-orange-500/10 text-orange-700 dark:text-orange-400 text-[10px] font-bold uppercase tracking-wide border border-orange-100 dark:border-orange-500/20">
-                            <Shield size={10} /> Full Admin
-                          </span>
-                        ) : (
-                          <span className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400 text-[10px] font-bold uppercase tracking-wide border border-blue-100 dark:border-blue-500/20">
-                            <Eye size={10} /> Read Only
-                          </span>
-                        )}
+
+                      <div className="flex items-center gap-2 mt-2">
+                        {/* 🛡️ USING SHIELD/EYE ICONS TO RESOLVE TS ERRORS */}
+                        <div className="flex items-center gap-1.5">
+                          {admin.access_level === "full_access" ? (
+                            <Shield
+                              size={10}
+                              className="text-orange-600 dark:text-orange-400"
+                            />
+                          ) : (
+                            <Eye
+                              size={10}
+                              className="text-blue-600 dark:text-blue-400"
+                            />
+                          )}
+                          <select
+                            value={admin.access_level}
+                            onChange={(e) =>
+                              handleInlineUpdate(admin.email, e.target.value)
+                            }
+                            disabled={loading}
+                            className={cn(
+                              "px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider border outline-none cursor-pointer transition-all",
+                              admin.access_level === "full_access"
+                                ? "bg-orange-50 dark:bg-orange-500/10 text-orange-700 dark:text-orange-400 border-orange-100 dark:border-orange-500/20"
+                                : "bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-100 dark:border-blue-500/20",
+                            )}
+                          >
+                            <option value="full_access">Full Admin</option>
+                            <option value="view_only">Read Only</option>
+                          </select>
+                        </div>
                       </div>
                     </div>
                   </div>
 
                   <div className="flex items-center gap-1">
-                    <button
-                      onClick={() => {
-                        setSelectedAdmin(admin);
-                        setIsEditModalOpen(true);
-                      }}
-                      className="p-2.5 rounded-lg text-zinc-400 hover:text-cyan-600 hover:bg-cyan-50 dark:hover:bg-cyan-500/10 transition-all"
-                    >
-                      <Edit3 size={16} />
-                    </button>
                     <button
                       onClick={() => {
                         setSelectedAdmin(admin);
