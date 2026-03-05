@@ -11,6 +11,14 @@ class Settings(BaseSettings):
     DATABASE_URL: str
 
     # =========================
+    # SUPABASE (REQUIRED)
+    # =========================
+
+    SUPABASE_URL: str
+    SUPABASE_SERVICE_ROLE_KEY: str
+
+
+    # =========================
     # CLOUDINARY (REQUIRED)
     # =========================
     CLOUDINARY_CLOUD_NAME: str
@@ -60,6 +68,8 @@ GROQ_API_KEY=
 SECRET_KEY=
 ALGORITHM=
 ACCESS_TOKEN_EXPIRE_MINUTES=
+SUPABASE_URL=
+SUPABASE_SERVICE_ROLE_KEY=
 """)
 
     print("\nError Details:\n", e)

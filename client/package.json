@@ -12,6 +12,7 @@
   "dependencies": {
     "@mapbox/geo-viewport": "^0.5.0",
     "@mapbox/mapbox-gl-geocoder": "^5.1.2",
+    "@supabase/supabase-js": "^2.98.0",
     "@tailwindcss/postcss": "^4.1.12",
     "@tailwindcss/vite": "^4.1.12",
     "axios": "^1.11.0",
