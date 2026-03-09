@@ -12,6 +12,7 @@ import {
   Users,
   TriangleAlert,
   ChevronRight,
+  Crown,
 } from "lucide-react";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
@@ -29,11 +30,19 @@ export const AdminManagement = () => {
   const [authorizedList, setAuthorizedList] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [currentUserEmail, setCurrentUserEmail] = useState("");
 
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [selectedAdmin, setSelectedAdmin] = useState<any>(null);
 
-  // 🛠️ FETCH: Always pull fresh data
+  // 🛠️ INITIALIZE: Get current logged in user
+  useEffect(() => {
+    supabase.auth
+      .getUser()
+      .then(({ data }) => setCurrentUserEmail(data.user?.email || ""));
+  }, []);
+
+  // 🛠️ FETCH & REAL-TIME: Always stay in sync
   const fetchAuthorizedAdmins = async () => {
     const { data, error } = await supabase
       .from("authorized_admins")
@@ -45,12 +54,27 @@ export const AdminManagement = () => {
 
   useEffect(() => {
     fetchAuthorizedAdmins();
+
+    // 📡 REAL-TIME SUBSCRIPTION
+    const channel = supabase
+      .channel("admin-changes")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "authorized_admins" },
+        () => {
+          fetchAuthorizedAdmins();
+        },
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
-  // 🛠️ INLINE UPDATE: Direct role change with icon usage
+  // 🛠️ INLINE UPDATE: Direct role change
   const handleInlineUpdate = async (targetEmail: string, newLevel: string) => {
     setLoading(true);
-
     const { error } = await supabase
       .from("authorized_admins")
       .update({ access_level: newLevel })
@@ -167,7 +191,6 @@ export const AdminManagement = () => {
         </header>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-          {/* ENROLLMENT FORM */}
           <section className="lg:col-span-4">
             <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 rounded-2xl shadow-sm space-y-6">
               <div className="flex items-center gap-2 font-bold text-zinc-900 dark:text-zinc-100 text-sm uppercase tracking-tight">
@@ -187,7 +210,7 @@ export const AdminManagement = () => {
                       placeholder="admin@supplychain.ai"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="w-full h-11 pl-10 pr-4 rounded-lg bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 focus:border-cyan-500 transition-all text-sm font-medium outline-none"
+                      className="w-full h-11 pl-10 pr-4 rounded-lg bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 focus:border-cyan-500 transition-all text-sm font-medium outline-none text-zinc-900 dark:text-white"
                       required
                     />
                   </div>
@@ -200,7 +223,7 @@ export const AdminManagement = () => {
                   <select
                     value={accessLevel}
                     onChange={(e) => setAccessLevel(e.target.value as any)}
-                    className="w-full h-11 px-3 rounded-lg bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-sm font-medium outline-none focus:border-cyan-500"
+                    className="w-full h-11 px-3 rounded-lg bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-sm font-medium outline-none focus:border-cyan-500 text-zinc-900 dark:text-white"
                   >
                     <option value="view_only">Read-Only Observer</option>
                     <option value="full_access">Full System Admin</option>
@@ -219,7 +242,6 @@ export const AdminManagement = () => {
             </div>
           </section>
 
-          {/* LIST SECTION */}
           <section className="lg:col-span-8 space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-zinc-400">
@@ -230,7 +252,7 @@ export const AdminManagement = () => {
                 <input
                   type="text"
                   placeholder="Filter by email..."
-                  className="w-full h-9 pl-9 pr-4 rounded-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-xs font-medium outline-none focus:border-cyan-500"
+                  className="w-full h-9 pl-9 pr-4 rounded-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-xs font-medium outline-none focus:border-cyan-500 text-zinc-900 dark:text-white"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
@@ -251,12 +273,25 @@ export const AdminManagement = () => {
                       />
                     </div>
                     <div>
-                      <p className="font-semibold text-sm text-zinc-900 dark:text-zinc-100 leading-none">
-                        {admin.email}
-                      </p>
+                      <div className="flex items-center gap-2 leading-none">
+                        <p className="font-semibold text-sm text-zinc-900 dark:text-zinc-100">
+                          {admin.email}
+                        </p>
+
+                        {/* SPECIAL BADGES */}
+                        {admin.email === "mauryashiva060@gmail.com" && (
+                          <span className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-zinc-950 dark:bg-white text-white dark:text-zinc-950 text-[8px] font-black uppercase tracking-tighter">
+                            <Crown size={8} /> Owner
+                          </span>
+                        )}
+                        {admin.email === currentUserEmail && (
+                          <span className="px-1.5 py-0.5 rounded bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 text-[8px] font-black uppercase tracking-tighter border border-cyan-500/20">
+                            You
+                          </span>
+                        )}
+                      </div>
 
                       <div className="flex items-center gap-2 mt-2">
-                        {/* 🛡️ USING SHIELD/EYE ICONS TO RESOLVE TS ERRORS */}
                         <div className="flex items-center gap-1.5">
                           {admin.access_level === "full_access" ? (
                             <Shield
@@ -274,9 +309,13 @@ export const AdminManagement = () => {
                             onChange={(e) =>
                               handleInlineUpdate(admin.email, e.target.value)
                             }
-                            disabled={loading}
+                            disabled={
+                              loading ||
+                              admin.email === "mauryashiva060@gmail.com" ||
+                              admin.email === currentUserEmail
+                            }
                             className={cn(
-                              "px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider border outline-none cursor-pointer transition-all",
+                              "px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider border outline-none cursor-pointer transition-all disabled:opacity-50",
                               admin.access_level === "full_access"
                                 ? "bg-orange-50 dark:bg-orange-500/10 text-orange-700 dark:text-orange-400 border-orange-100 dark:border-orange-500/20"
                                 : "bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-100 dark:border-blue-500/20",
@@ -292,11 +331,15 @@ export const AdminManagement = () => {
 
                   <div className="flex items-center gap-1">
                     <button
+                      disabled={
+                        admin.email === "mauryashiva060@gmail.com" ||
+                        admin.email === currentUserEmail
+                      }
                       onClick={() => {
                         setSelectedAdmin(admin);
                         setIsDeleteModalOpen(true);
                       }}
-                      className="p-2.5 rounded-lg text-zinc-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all"
+                      className="p-2.5 rounded-lg text-zinc-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
                     >
                       <Trash2 size={16} />
                     </button>
