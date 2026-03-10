@@ -8,11 +8,15 @@ import {
 /* ---------------- AUTH COMPONENTS ---------------- */
 import { Login } from "@/components/auth/Login";
 import { Signup } from "@/components/auth/Signup";
-import { ResetPassword } from "@/components/auth/ResetPassword";
+import { ResetPassword } from "@/components/auth/ResetPassword.tsx"; // Updated path
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { AdminManagement } from "@/pages/AdminManagement";
 
 /* ---------------- THEME CONTROLLER ---------------- */
+/**
+ * Handles system and manual theme switching.
+ * Applying the class to documentElement ensures Tailwind's 'dark:' variants work.
+ */
 const ThemeController = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     const savedTheme = localStorage.getItem("theme");
@@ -48,6 +52,9 @@ const router = createBrowserRouter([
   // PUBLIC AUTH ROUTES
   { path: "/login", element: <Login /> },
   { path: "/signup", element: <Signup /> },
+
+  // 🔑 RESET PASSWORD ROUTE
+  // This must be a top-level route so Supabase can redirect here directly from the email link
   { path: "/reset-password", element: <ResetPassword /> },
 
   // PROTECTED DASHBOARD ROUTES
@@ -80,7 +87,7 @@ const router = createBrowserRouter([
     ],
   },
 
-  // FALLBACK
+  // FALLBACK: Redirect any unknown routes to login
   { path: "*", element: <Navigate to="/login" replace /> },
 ]);
 

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { useNavigate, Link } from "react-router-dom";
 import { Mail, Lock, ShieldCheck, ChevronRight } from "lucide-react";
@@ -8,6 +8,50 @@ export const Login = () => {
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // --- NEW: Password Reset Cooldown Logic ---
+  const [resetLoading, setResetLoading] = useState(false);
+  const [cooldown, setCooldown] = useState(0);
+
+  useEffect(() => {
+    if (cooldown > 0) {
+      const timer = setTimeout(() => setCooldown(cooldown - 1), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [cooldown]);
+
+  const handleForgotPassword = async () => {
+    if (!formData.email) {
+      setError("Please enter your email address to reset your password.");
+      return;
+    }
+
+    if (cooldown > 0) return;
+
+    setResetLoading(true);
+    setError(null);
+
+    try {
+      const { error: resetError } = await supabase.auth.resetPasswordForEmail(
+        formData.email,
+        {
+          redirectTo: `${window.location.origin}/reset-password`,
+        },
+      );
+
+      if (resetError) {
+        setError(resetError.message);
+      } else {
+        alert("Security reset link dispatched to your inbox.");
+        setCooldown(30); // Start 30-second gap
+      }
+    } catch (err) {
+      setError("An unexpected error occurred during the reset request.");
+    } finally {
+      setResetLoading(false);
+    }
+  };
+  // ------------------------------------------
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -23,7 +67,7 @@ export const Login = () => {
 
       if (loginError) {
         setError(loginError.message);
-        setLoading(false); // Fix: Ensure loading stops on error
+        setLoading(false);
         return;
       }
 
@@ -34,7 +78,6 @@ export const Login = () => {
         .eq("id", authData.user.id)
         .maybeSingle();
 
-      // We now allow 'full_access' OR 'view_only'
       const hasValidAccess =
         profile &&
         (profile.access_level === "full_access" ||
@@ -49,7 +92,6 @@ export const Login = () => {
         return;
       }
 
-      // If they passed the check, let them in
       navigate("/", { replace: true });
       window.location.reload();
     } catch (err) {
@@ -65,21 +107,6 @@ export const Login = () => {
       options: { redirectTo: window.location.origin + "/dashboard" },
     });
     if (error) setError(error.message);
-  };
-
-  const handleForgotPassword = async () => {
-    if (!formData.email) {
-      setError("Please enter your email address to reset your password.");
-      return;
-    }
-    const { error } = await supabase.auth.resetPasswordForEmail(
-      formData.email,
-      {
-        redirectTo: window.location.origin + "/reset-password",
-      },
-    );
-    if (error) setError(error.message);
-    else alert("Security reset link dispatched to your inbox.");
   };
 
   return (
@@ -135,12 +162,18 @@ export const Login = () => {
                 <label className="text-xs font-medium text-zinc-700 dark:text-zinc-300">
                   Password
                 </label>
+                {/* UPDATED RESET BUTTON */}
                 <button
                   type="button"
+                  disabled={resetLoading || cooldown > 0}
                   onClick={handleForgotPassword}
-                  className="text-xs font-semibold text-cyan-600 hover:text-cyan-500 transition-colors"
+                  className="text-xs font-semibold text-cyan-600 hover:text-cyan-500 transition-colors disabled:text-zinc-400 disabled:cursor-not-allowed"
                 >
-                  Forgot password?
+                  {resetLoading
+                    ? "Sending..."
+                    : cooldown > 0
+                      ? `Retry in ${cooldown}s`
+                      : "Forgot password?"}
                 </button>
               </div>
               <div className="relative">
@@ -161,7 +194,7 @@ export const Login = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full h-11 bg-zinc-950 dark:bg-zinc-50 text-white dark:text-zinc-950 font-semibold rounded-lg transition-all active:scale-[0.98] hover:opacity-90 flex items-center justify-center gap-2 text-sm shadow-sm"
+              className="w-full h-11 bg-zinc-950 dark:bg-zinc-50 text-white dark:text-zinc-950 font-semibold rounded-lg transition-all active:scale-[0.98] hover:opacity-90 flex items-center justify-center gap-2 text-sm shadow-sm disabled:opacity-50"
             >
               {loading ? "Authenticating..." : "Sign In"}
               {!loading && <ChevronRight size={16} />}
