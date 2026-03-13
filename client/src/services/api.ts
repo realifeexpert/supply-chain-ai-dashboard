@@ -29,6 +29,37 @@ const apiClient = axios.create({
   },
 });
 
+// Attach JWT token for protected admin and bulk endpoints.
+apiClient.interceptors.request.use((config) => {
+  const token = localStorage.getItem("token");
+  if (token && config.headers) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+apiClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      if (window.location.pathname !== "/auth") {
+        window.location.href = "/auth";
+      }
+    }
+    return Promise.reject(error);
+  }
+);
+
+export const loginUser = (formData: FormData) =>
+  apiClient.post("/auth/login", formData, {
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+  });
+
+export const signupUser = (data: { email: string; password: string }) =>
+  apiClient.post("/auth/signup", data);
+
 // Type definition for daily revenue data points
 export interface RevenueDataPoint {
   date: string; // 'YYYY-MM-DD'

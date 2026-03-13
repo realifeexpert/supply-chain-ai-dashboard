@@ -5,8 +5,9 @@ from typing import List
 from ..database import get_db
 from ..schemas import schemas
 from ..models import models
+from .auth import get_current_user
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(get_current_user)])
 
 # --- SETTINGS API ENDPOINTS ---
 

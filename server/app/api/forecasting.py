@@ -10,8 +10,9 @@ from typing import Optional  # For the optional product_id parameter
 from ..database import get_db
 from ..schemas import schemas
 from ..models import models
+from .auth import get_current_user
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(get_current_user)])
 
 @router.get("/forecast", response_model=schemas.DemandForecast)
 def get_demand_forecast(

@@ -4,12 +4,13 @@ from typing import List
 from ..database import get_db
 from ..schemas import schemas
 from ..models import models
+from .auth import get_current_user
 # Import helpers to dynamically calculate product status based on settings
 from ..utils.settings_helpers import get_low_stock_threshold, get_product_status
 from ..core.websocket_manager import manager  # WebSocket manager
 
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(get_current_user)])
 
 @router.get("/products", response_model=List[schemas.Product])
 def get_all_products(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):

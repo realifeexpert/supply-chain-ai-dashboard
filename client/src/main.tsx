@@ -1,6 +1,9 @@
 import React, { useEffect } from "react";
 import ReactDOM from "react-dom/client";
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import {
+  createBrowserRouter,
+  RouterProvider,
+} from "react-router-dom";
 import "@/index.css";
 
 /* ---------------- THEME CONTROLLER ---------------- */
@@ -35,6 +38,7 @@ import LogisticsPage from "@/pages/LogisticsPage";
 import UsersPage from "@/pages/UsersPage";
 import ImportPage from "@/pages/ImportPage";
 import ForecastPage from "@/pages/ForecastPage";
+import AuthPage from "@/pages/AuthPage";
 
 const router = createBrowserRouter([
   {
@@ -51,6 +55,7 @@ const router = createBrowserRouter([
       { path: "users", element: <UsersPage /> },
     ],
   },
+  { path: "/auth", element: <AuthPage /> },
 ]);
 
 /* ---------------- APP MOUNT ---------------- */

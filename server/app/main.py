@@ -19,6 +19,7 @@ from .api import auth
 # Customer API Routers
 from .api.customer import catalog as customer_catalog
 from .api.customer import orders as customer_orders
+from .api.customer import payments as customer_payments
 from app.api.customer import address as customer_address_router
 
 # Bulk Operation Routers
@@ -146,6 +147,12 @@ app.include_router(
     customer_orders.router,
     prefix="/api/customer/orders",
     tags=["Customer Orders"]
+)
+
+app.include_router(
+    customer_payments.router,
+    prefix="/api/customer/payments",
+    tags=["Customer Payments"]
 )
 
 app.include_router(

@@ -76,6 +76,20 @@ export const getProductDetails = (id: number) =>
 export const placeOrder = (data: any) =>
   apiClient.post("/customer/orders/place-order", data);
 
+export const createRazorpayOrder = (data: {
+  items: { product_id: number; quantity: number }[];
+  discount_value?: number;
+  discount_type?: "fixed" | "percentage";
+  shipping_charges?: number;
+  receipt?: string;
+}) => apiClient.post("/customer/payments/razorpay/create-order", data);
+
+export const verifyRazorpayPayment = (data: {
+  razorpay_order_id: string;
+  razorpay_payment_id: string;
+  razorpay_signature: string;
+}) => apiClient.post("/customer/payments/razorpay/verify", data);
+
 export const getMyOrders = () => apiClient.get("/customer/orders/my-orders");
 
 /* ================================

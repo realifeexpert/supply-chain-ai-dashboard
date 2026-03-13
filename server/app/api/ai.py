@@ -1,10 +1,11 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 from groq import Groq
 
 from ..config import settings  # Import app settings (for API keys)
+from .auth import get_current_user
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(get_current_user)])
 
 # Defines the expected request body structure from the frontend
 class DescriptionRequest(BaseModel):
