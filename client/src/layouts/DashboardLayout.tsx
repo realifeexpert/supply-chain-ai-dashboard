@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { NavLink, Outlet } from "react-router-dom";
+import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
   BarChart2,
@@ -15,9 +15,12 @@ import {
   Brain,
   Sun,
   Moon,
+  LogOut,
+  ShieldCheck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SettingsModal } from "@/components/settings/SettingsModal";
+import { supabase } from "@/lib/supabase"; // Import supabase for logout
 
 /* ---------------- THEME HOOK ---------------- */
 
@@ -72,7 +75,12 @@ const NavItem: React.FC<NavItemProps> = ({
     }
   >
     <Icon className="h-5 w-5 flex-shrink-0" />
-    <span className={cn("overflow-hidden", isExpanded ? "w-full" : "w-0")}>
+    <span
+      className={cn(
+        "overflow-hidden whitespace-nowrap",
+        isExpanded ? "w-full" : "w-0",
+      )}
+    >
       {label}
     </span>
   </NavLink>
@@ -89,55 +97,15 @@ const navItems = [
   { to: "/logistics", label: "Logistics", icon: Truck },
   { to: "/import", label: "Import / Export", icon: FileUp },
   { to: "/users", label: "Users", icon: Users },
+  // Added Admin Management to the Sidebar
+  { to: "/admin-management", label: "Admin Control", icon: ShieldCheck },
 ];
-
-/* ---------------- MOBILE SIDEBAR ---------------- */
-
-const MobileSidebar: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
-  isOpen,
-  onClose,
-}) => (
-  <div
-    className={cn(
-      "fixed inset-0 z-50 bg-black/30 transition-opacity md:hidden",
-      isOpen ? "opacity-100" : "opacity-0 pointer-events-none",
-    )}
-    onClick={onClose}
-  >
-    <div
-      className={cn(
-        "absolute left-0 top-0 h-full w-72 bg-white dark:bg-zinc-900 border-r border-gray-200 dark:border-zinc-800 transition-transform duration-300",
-        isOpen ? "translate-x-0" : "-translate-x-full",
-      )}
-      onClick={(e) => e.stopPropagation()}
-    >
-      <div className="flex h-full flex-col">
-        <div className="flex h-14 items-center justify-between border-b border-gray-200 dark:border-zinc-800 px-4">
-          <NavLink to="/" className="flex items-center gap-2 font-semibold">
-            <Truck className="h-6 w-6 text-blue-600" />
-            <span className="text-gray-900 dark:text-white">
-              SupplyChain AI
-            </span>
-          </NavLink>
-          <button onClick={onClose}>
-            <X className="h-5 w-5 text-gray-600 dark:text-zinc-400" />
-          </button>
-        </div>
-
-        <nav className="flex-1 p-2 text-sm font-medium">
-          {navItems.map((item) => (
-            <NavItem key={item.to} {...item} isExpanded />
-          ))}
-        </nav>
-      </div>
-    </div>
-  </div>
-);
 
 /* ---------------- MAIN LAYOUT ---------------- */
 
 const DashboardLayout: React.FC = () => {
   const { theme, toggleTheme } = useTheme();
+  const navigate = useNavigate();
 
   const [isSidebarExpanded, setIsSidebarExpanded] = useState(true);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
@@ -147,6 +115,15 @@ const DashboardLayout: React.FC = () => {
   const handleSettingsSave = () => {
     setIsSettingsModalOpen(false);
     setRefreshKey((prev) => prev + 1);
+  };
+
+  const handleLogout = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (!error) {
+      navigate("/login");
+    } else {
+      console.error("Logout failed:", error.message);
+    }
   };
 
   return (
@@ -172,7 +149,7 @@ const DashboardLayout: React.FC = () => {
               <NavLink to="/" className="flex items-center gap-2 font-semibold">
                 <Truck className="h-6 w-6 text-blue-600" />
                 {isSidebarExpanded && (
-                  <span className="text-gray-900 dark:text-white">
+                  <span className="text-gray-900 dark:text-white uppercase tracking-tighter font-black">
                     SupplyChain AI
                   </span>
                 )}
@@ -186,7 +163,7 @@ const DashboardLayout: React.FC = () => {
               </button>
             </div>
 
-            <nav className="flex-1 px-2 py-2 text-sm font-medium">
+            <nav className="flex-1 px-2 py-4 text-sm font-medium space-y-1">
               {navItems.map((item) => (
                 <NavItem
                   key={item.to}
@@ -195,6 +172,20 @@ const DashboardLayout: React.FC = () => {
                 />
               ))}
             </nav>
+
+            {/* LOGOUT BUTTON IN SIDEBAR */}
+            <div className="p-2 border-t border-gray-200 dark:border-zinc-800">
+              <button
+                onClick={handleLogout}
+                className={cn(
+                  "flex items-center gap-3 w-full rounded-lg px-3 py-2 text-red-500 transition hover:bg-red-50 dark:hover:bg-red-900/10 font-bold",
+                  !isSidebarExpanded && "justify-center",
+                )}
+              >
+                <LogOut className="h-5 w-5 flex-shrink-0" />
+                {isSidebarExpanded && <span>Logout</span>}
+              </button>
+            </div>
           </div>
         </div>
 
@@ -222,7 +213,10 @@ const DashboardLayout: React.FC = () => {
               )}
             </button>
 
-            <Bell className="h-5 w-5 text-gray-600 dark:text-zinc-400" />
+            <button className="p-2 relative rounded-lg border border-gray-200 dark:border-zinc-700 hover:bg-gray-100 dark:hover:bg-zinc-800">
+              <Bell className="h-5 w-5 text-gray-600 dark:text-zinc-400" />
+              <span className="absolute top-1.5 right-1.5 h-2 w-2 bg-red-500 rounded-full border-2 border-white dark:border-zinc-900" />
+            </button>
 
             <button
               onClick={() => setIsSettingsModalOpen(true)}
@@ -237,10 +231,51 @@ const DashboardLayout: React.FC = () => {
           </main>
         </div>
 
-        <MobileSidebar
-          isOpen={isMobileSidebarOpen}
-          onClose={() => setIsMobileSidebarOpen(false)}
-        />
+        {/* MOBILE SIDEBAR */}
+        <div
+          className={cn(
+            "fixed inset-0 z-50 bg-black/30 transition-opacity md:hidden",
+            isMobileSidebarOpen
+              ? "opacity-100"
+              : "opacity-0 pointer-events-none",
+          )}
+          onClick={() => setIsMobileSidebarOpen(false)}
+        >
+          <div
+            className={cn(
+              "absolute left-0 top-0 h-full w-72 bg-white dark:bg-zinc-900 border-r border-gray-200 dark:border-zinc-800 transition-transform duration-300",
+              isMobileSidebarOpen ? "translate-x-0" : "-translate-x-full",
+            )}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex h-full flex-col">
+              <div className="flex h-14 items-center justify-between border-b border-gray-200 dark:border-zinc-800 px-4">
+                <span className="font-black uppercase tracking-tighter italic text-blue-600">
+                  SupplyChain AI
+                </span>
+                <button onClick={() => setIsMobileSidebarOpen(false)}>
+                  <X className="h-5 w-5 text-gray-600 dark:text-zinc-400" />
+                </button>
+              </div>
+
+              <nav className="flex-1 p-2 text-sm font-medium space-y-1">
+                {navItems.map((item) => (
+                  <NavItem key={item.to} {...item} isExpanded />
+                ))}
+              </nav>
+
+              <div className="p-4 border-t border-gray-200 dark:border-zinc-800">
+                <button
+                  onClick={handleLogout}
+                  className="flex items-center gap-3 w-full rounded-lg px-3 py-2 text-red-500 font-bold"
+                >
+                  <LogOut className="h-5 w-5" />
+                  <span>Logout</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </>
   );
