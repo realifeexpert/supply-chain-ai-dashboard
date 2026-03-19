@@ -9,6 +9,7 @@ from typing import List, Dict
 from ..database import get_db
 from ..schemas import schemas
 from ..models import models
+from .auth import get_current_user
 import random
 from datetime import datetime, timedelta, date
 from calendar import month_abbr # For getting month abbreviations (e.g., "Jan")
@@ -16,7 +17,7 @@ from calendar import month_abbr # For getting month abbreviations (e.g., "Jan")
 # Import helper function to get dynamic settings
 from ..utils.settings_helpers import get_low_stock_threshold
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(get_current_user)])
 
 # --- RevenueOverTime Schemas ---
 class RevenueDataPoint(BaseModel):

@@ -39,6 +39,12 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 10080
 
     # =========================
+    # RAZORPAY (OPTIONAL)
+    # =========================
+    RAZORPAY_KEY_ID: Optional[str] = None
+    RAZORPAY_KEY_SECRET: Optional[str] = None
+
+    # =========================
     # Pydantic config
     # =========================
     model_config = SettingsConfigDict(

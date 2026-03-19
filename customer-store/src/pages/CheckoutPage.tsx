@@ -2,27 +2,61 @@ import React, { useEffect, useState, useCallback } from "react";
 import { useCartStore } from "@/store/useCartStore";
 import { Navbar } from "@/components/common/Navbar";
 import { useNavigate } from "react-router-dom";
-import { placeOrder, getStorefrontProducts } from "@/services/api"; // Added getStorefrontProducts
+import {
+  placeOrder,
+  getStorefrontProducts,
+  createRazorpayOrder,
+  verifyRazorpayPayment,
+} from "@/services/api";
 import { AddressSelector } from "@/components/checkout/AddressSelector";
-import { useInventorySocket } from "@/hooks/useInventorySocket"; // 1. Import the socket hook
+import { useInventorySocket } from "@/hooks/useInventorySocket";
 import {
   ShieldCheck,
   Truck,
   CreditCard,
   ArrowRight,
   PackageX,
+  Circle,
+  CheckCircle2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+type CheckoutPaymentMethod = "COD" | "RAZORPAY";
+
+interface RazorpaySuccessPayload {
+  razorpay_order_id: string;
+  razorpay_payment_id: string;
+  razorpay_signature: string;
+}
+
+const getApiErrorMessage = (error: unknown, fallback: string): string => {
+  const err = error as { response?: { data?: { detail?: string; message?: string } } };
+  return err?.response?.data?.detail || err?.response?.data?.message || fallback;
+};
+
+const loadRazorpayScript = async (): Promise<boolean> => {
+  if ((window as any).Razorpay) {
+    return true;
+  }
+
+  return new Promise((resolve) => {
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.async = true;
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
+    document.body.appendChild(script);
+  });
+};
+
 export const CheckoutPage: React.FC = () => {
-  // Added syncPrices to the destructuring
   const { items, getTotalPrice, clearCart, syncPrices } = useCartStore();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [selectedAddress, setSelectedAddress] = useState<any>(null);
+  const [selectedPaymentMethod, setSelectedPaymentMethod] =
+    useState<CheckoutPaymentMethod>("COD");
 
-  // 2. Define the sync function wrapped in useCallback
-  // This ensures the socket doesn't create infinite loops
   const validateAndSync = useCallback(async () => {
     try {
       const response = await getStorefrontProducts();
@@ -47,6 +81,80 @@ export const CheckoutPage: React.FC = () => {
   const hasOutOfStock = items.some((item) => item.stock_quantity <= 0);
   const totalAmount = getTotalPrice();
 
+  const buildOrderPayload = (paymentMethod: "COD" | "UPI") => ({
+    address_id: selectedAddress.id,
+    payment_method: paymentMethod,
+    discount_value: 0,
+    discount_type: "fixed",
+    shipping_charges: 0,
+    items: items.map((item) => ({
+      product_id: item.id,
+      quantity: item.quantity,
+    })),
+  });
+
+  const processRazorpayPayment = async () => {
+    const razorpayLoaded = await loadRazorpayScript();
+
+    if (!razorpayLoaded) {
+      alert("Unable to load Razorpay checkout. Please try again.");
+      return false;
+    }
+
+    const orderResponse = await createRazorpayOrder({
+      items: items.map((item) => ({
+        product_id: item.id,
+        quantity: item.quantity,
+      })),
+      discount_value: 0,
+      discount_type: "fixed",
+      shipping_charges: 0,
+    });
+
+    const { order_id, amount, currency, key_id } = orderResponse.data;
+
+    if (!order_id || !amount || !key_id) {
+      throw new Error("Invalid Razorpay order response");
+    }
+
+    return new Promise<boolean>((resolve) => {
+      const razorpay = new (window as any).Razorpay({
+        key: key_id,
+        amount,
+        currency: currency || "INR",
+        name: "SF-AI Store",
+        description: "Order payment",
+        order_id,
+        handler: async (response: RazorpaySuccessPayload) => {
+          try {
+            await verifyRazorpayPayment(response);
+            await placeOrder(buildOrderPayload("UPI"));
+            alert("Payment successful. Your order has been placed.");
+            clearCart();
+            navigate("/");
+            resolve(true);
+          } catch (error) {
+            console.error("Payment verification/order failed:", error);
+            alert("Payment was received but order placement failed. Please contact support.");
+            resolve(false);
+          }
+        },
+        prefill: {
+          name: selectedAddress?.full_name,
+          contact: selectedAddress?.phone_number,
+        },
+        theme: {
+          color: "#06b6d4",
+        },
+        modal: {
+          ondismiss: () => resolve(false),
+        },
+      });
+
+      razorpay.open();
+    });
+  };
+
   const handlePlaceOrder = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -62,26 +170,19 @@ export const CheckoutPage: React.FC = () => {
 
     setLoading(true);
 
-    const orderPayload = {
-      address_id: selectedAddress.id,
-      payment_method: "COD",
-      discount_value: 0,
-      discount_type: "fixed",
-      shipping_charges: 0,
-      items: items.map((item) => ({
-        product_id: item.id,
-        quantity: item.quantity,
-      })),
-    };
-
     try {
-      await placeOrder(orderPayload);
-      alert("Success! Your order has been placed.");
-      clearCart();
-      navigate("/");
+      if (selectedPaymentMethod === "COD") {
+        await placeOrder(buildOrderPayload("COD"));
+        alert("Success! Your order has been placed.");
+        clearCart();
+        navigate("/");
+        return;
+      }
+
+      await processRazorpayPayment();
     } catch (error) {
       console.error("Order failed:", error);
-      alert("Failed to place order.");
+      alert(getApiErrorMessage(error, "Failed to place order."));
     } finally {
       setLoading(false);
     }
@@ -124,23 +225,66 @@ export const CheckoutPage: React.FC = () => {
                   Payment_Method
                 </h2>
               </div>
-              <div className="bg-card border border-border p-6 rounded-3xl flex items-center justify-between group transition-all">
-                <div className="flex items-center gap-4">
-                  <div className="h-10 w-10 bg-secondary rounded-xl flex items-center justify-center">
-                    <span className="text-xs font-black text-cyan-600 dark:text-cyan-400">
-                      COD
-                    </span>
+              <div className="space-y-4">
+                <button
+                  type="button"
+                  onClick={() => setSelectedPaymentMethod("COD")}
+                  className={cn(
+                    "w-full bg-card border p-6 rounded-3xl flex items-center justify-between transition-all",
+                    selectedPaymentMethod === "COD"
+                      ? "border-cyan-500 shadow-[0_0_20px_rgba(6,182,212,0.15)]"
+                      : "border-border hover:border-cyan-500/60",
+                  )}
+                >
+                  <div className="flex items-center gap-4 text-left">
+                    <div className="h-10 w-10 bg-secondary rounded-xl flex items-center justify-center">
+                      <span className="text-xs font-black text-cyan-600 dark:text-cyan-400">
+                        COD
+                      </span>
+                    </div>
+                    <div>
+                      <p className="font-bold text-sm">Cash On Delivery</p>
+                      <p className="text-[10px] text-muted-foreground font-black tracking-widest uppercase">
+                        Pay when your order arrives
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="font-bold text-sm">Cash On Delivery</p>
-                    <p className="text-[10px] text-muted-foreground font-black tracking-widest uppercase">
-                      Default Selection
-                    </p>
+                  {selectedPaymentMethod === "COD" ? (
+                    <CheckCircle2 className="h-5 w-5 text-cyan-500" />
+                  ) : (
+                    <Circle className="h-5 w-5 text-muted-foreground" />
+                  )}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setSelectedPaymentMethod("RAZORPAY")}
+                  className={cn(
+                    "w-full bg-card border p-6 rounded-3xl flex items-center justify-between transition-all",
+                    selectedPaymentMethod === "RAZORPAY"
+                      ? "border-cyan-500 shadow-[0_0_20px_rgba(6,182,212,0.15)]"
+                      : "border-border hover:border-cyan-500/60",
+                  )}
+                >
+                  <div className="flex items-center gap-4 text-left">
+                    <div className="h-10 min-w-10 px-2 bg-secondary rounded-xl flex items-center justify-center">
+                      <span className="text-[10px] font-black text-cyan-600 dark:text-cyan-400 tracking-wide">
+                        RP
+                      </span>
+                    </div>
+                    <div>
+                      <p className="font-bold text-sm">Razorpay (UPI/Card/NetBanking)</p>
+                      <p className="text-[10px] text-muted-foreground font-black tracking-widest uppercase">
+                        Pay now with secure checkout
+                      </p>
+                    </div>
                   </div>
-                </div>
-                <div className="h-5 w-5 rounded-full border-2 border-cyan-500 flex items-center justify-center">
-                  <div className="h-2.5 w-2.5 bg-cyan-500 rounded-full" />
-                </div>
+                  {selectedPaymentMethod === "RAZORPAY" ? (
+                    <CheckCircle2 className="h-5 w-5 text-cyan-500" />
+                  ) : (
+                    <Circle className="h-5 w-5 text-muted-foreground" />
+                  )}
+                </button>
               </div>
             </section>
           </div>
@@ -231,7 +375,7 @@ export const CheckoutPage: React.FC = () => {
                     "Select Address"
                   ) : (
                     <>
-                      Place Order
+                      {selectedPaymentMethod === "COD" ? "Place Order" : "Pay Securely"}
                       <ArrowRight className="h-4 w-4 transition-transform group-hover/btn:translate-x-1" />
                     </>
                   )}

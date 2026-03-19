@@ -4,12 +4,13 @@ from typing import List
 from ..database import get_db
 from ..schemas import schemas
 from ..models import models
+from .auth import get_current_user
 # Import the WebSocket manager to sync inventory changes live
 from ..core.websocket_manager import manager 
 from sqlalchemy import func # Import func for database-level time
 from datetime import datetime, timezone # Use modern timezone-aware dates
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(get_current_user)])
 
 @router.get("/", response_model=List[schemas.Order])
 def get_all_orders(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):

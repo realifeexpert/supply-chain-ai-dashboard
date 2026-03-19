@@ -12,6 +12,7 @@ from pydantic import BaseModel
 from ..database import get_db
 from ..schemas import schemas
 from ..models import models
+from ..api.auth import get_current_user
 
 # --- NAYE IMPORTS ---
 # Helper function ko 'utils' se import kar rahe hain
@@ -22,7 +23,8 @@ from ..utils.report_store import error_reports
 # Router ko prefix aur tags ke saath set karna clean rehta hai
 router = APIRouter(
     prefix="/bulk/orders",
-    tags=["Bulk Orders"]
+    tags=["Bulk Orders"],
+    dependencies=[Depends(get_current_user)]
 )
 
 # --- Response Model (Sirf Order ka) ---

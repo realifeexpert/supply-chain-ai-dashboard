@@ -12,6 +12,7 @@ from pydantic import BaseModel
 from ..database import get_db
 from ..schemas import schemas
 from ..models import models
+from ..api.auth import get_current_user
 
 # Import helper functions for dynamic status calculation
 from ..utils.settings_helpers import get_low_stock_threshold, get_product_status
@@ -20,7 +21,8 @@ from ..utils.report_store import error_reports
 
 router = APIRouter(
     prefix="/bulk/inventory",  # Prefix for all routes in this file
-    tags=["Bulk Inventory"]  # Tag for API documentation
+    tags=["Bulk Inventory"],  # Tag for API documentation
+    dependencies=[Depends(get_current_user)]
 )
 
 # Pydantic model for the upload response body
