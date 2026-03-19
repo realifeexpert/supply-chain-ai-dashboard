@@ -93,13 +93,14 @@ export const Login = () => {
       }
 
       // 3. Backend Session (Handles 400 errors gracefully)
+      let backendToken: string | null = null;
       try {
         const backendForm = new FormData();
         backendForm.append("username", formData.email);
         backendForm.append("password", formData.password);
 
         const backendLoginResponse = await loginUser(backendForm);
-        const backendToken = backendLoginResponse.data?.access_token;
+        backendToken = backendLoginResponse.data?.access_token;
 
         if (backendToken) {
           localStorage.setItem("token", backendToken);
@@ -110,8 +111,18 @@ export const Login = () => {
         }
       } catch (backendErr) {
         console.warn("Backend session failed, but Supabase is active.");
-        // If your app REQUIRES the backend token to function, uncomment below:
-        // throw backendErr;
+      }
+
+      // 4. Speak Supabase token to backend if we don't yet have one
+      if (!backendToken && authData?.session?.access_token) {
+        localStorage.setItem("token", authData.session.access_token);
+        localStorage.setItem(
+          "user",
+          JSON.stringify({
+            id: authData.user?.id,
+            email: authData.user?.email,
+          }),
+        );
       }
 
       // 4. Success Redirect
