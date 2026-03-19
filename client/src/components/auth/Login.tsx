@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
+import axios from "axios";
 import { supabase } from "@/lib/supabase";
+import { loginUser } from "@/services/api";
 import { useNavigate, Link } from "react-router-dom";
 import { Mail, Lock, ShieldCheck, ChevronRight } from "lucide-react";
 
@@ -92,10 +94,37 @@ export const Login = () => {
         return;
       }
 
+      const backendForm = new FormData();
+      backendForm.append("username", formData.email);
+      backendForm.append("password", formData.password);
+
+      const backendLoginResponse = await loginUser(backendForm);
+      const backendToken = backendLoginResponse.data?.access_token;
+
+      if (!backendToken) {
+        setError("Login succeeded, but backend session could not be created.");
+        await supabase.auth.signOut();
+        setLoading(false);
+        return;
+      }
+
+      localStorage.setItem("token", backendToken);
+      localStorage.setItem(
+        "user",
+        JSON.stringify(backendLoginResponse.data?.user || {}),
+      );
+
       navigate("/", { replace: true });
       window.location.reload();
     } catch (err) {
-      setError("An unexpected error occurred during authentication.");
+      if (axios.isAxiosError(err)) {
+        setError(
+          err.response?.data?.detail ||
+            "Unable to create backend session. Check credentials.",
+        );
+      } else {
+        setError("An unexpected error occurred during authentication.");
+      }
     } finally {
       setLoading(false);
     }
