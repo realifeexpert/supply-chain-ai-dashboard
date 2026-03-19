@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 
 from app.models import models
 from app.database import Base
+from app.core.security import hash_password
 
 load_dotenv()
 
@@ -21,6 +22,22 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base.metadata.create_all(bind=engine)
 
 db = SessionLocal()
+
+def seed_users():
+    print("Seeding users...")
+    admin_user = models.User(
+        email="admin@example.com",
+        hashed_password=hash_password("admin123"),
+        role="admin"
+    )
+    existing_user = db.query(models.User).filter(models.User.email == admin_user.email).first()
+    if not existing_user:
+        db.add(admin_user)
+        print(f"User added: {admin_user.email}")
+    else:
+        print(f"User '{admin_user.email}' already exists. Skipping.")
+    db.commit()
+    print("✅ Users seeding complete!")
 
 def seed_products():
     print("Seeding products...")
@@ -60,6 +77,7 @@ def seed_vehicles():
 if __name__ == "__main__":
     try:
         # Dono functions ko yahan call karein
+        seed_users()
         seed_products()
         seed_vehicles()
     finally:

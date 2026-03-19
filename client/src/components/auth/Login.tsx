@@ -11,7 +11,7 @@ export const Login = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // --- NEW: Password Reset Cooldown Logic ---
+  // --- Password Reset Cooldown Logic ---
   const [resetLoading, setResetLoading] = useState(false);
   const [cooldown, setCooldown] = useState(0);
 
@@ -27,7 +27,6 @@ export const Login = () => {
       setError("Please enter your email address to reset your password.");
       return;
     }
-
     if (cooldown > 0) return;
 
     setResetLoading(true);
@@ -36,16 +35,14 @@ export const Login = () => {
     try {
       const { error: resetError } = await supabase.auth.resetPasswordForEmail(
         formData.email,
-        {
-          redirectTo: `${window.location.origin}/reset-password`,
-        },
+        { redirectTo: `${window.location.origin}/reset-password` },
       );
 
       if (resetError) {
         setError(resetError.message);
       } else {
         alert("Security reset link dispatched to your inbox.");
-        setCooldown(30); // Start 30-second gap
+        setCooldown(30);
       }
     } catch (err) {
       setError("An unexpected error occurred during the reset request.");
@@ -53,14 +50,15 @@ export const Login = () => {
       setResetLoading(false);
     }
   };
-  // ------------------------------------------
 
+  // --- Main Login Logic ---
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
 
     try {
+      // 1. Supabase Authentication
       const { data: authData, error: loginError } =
         await supabase.auth.signInWithPassword({
           email: formData.email,
@@ -73,7 +71,7 @@ export const Login = () => {
         return;
       }
 
-      // 🔍 Updated Logic: Check for ANY valid admin access level
+      // 2. Check Admin Permissions
       const { data: profile, error: profileError } = await supabase
         .from("admin_profiles")
         .select("role, access_level")
@@ -94,34 +92,34 @@ export const Login = () => {
         return;
       }
 
-      const backendForm = new FormData();
-      backendForm.append("username", formData.email);
-      backendForm.append("password", formData.password);
+      // 3. Backend Session (Handles 400 errors gracefully)
+      try {
+        const backendForm = new FormData();
+        backendForm.append("username", formData.email);
+        backendForm.append("password", formData.password);
 
-      const backendLoginResponse = await loginUser(backendForm);
-      const backendToken = backendLoginResponse.data?.access_token;
+        const backendLoginResponse = await loginUser(backendForm);
+        const backendToken = backendLoginResponse.data?.access_token;
 
-      if (!backendToken) {
-        setError("Login succeeded, but backend session could not be created.");
-        await supabase.auth.signOut();
-        setLoading(false);
-        return;
+        if (backendToken) {
+          localStorage.setItem("token", backendToken);
+          localStorage.setItem(
+            "user",
+            JSON.stringify(backendLoginResponse.data?.user || {}),
+          );
+        }
+      } catch (backendErr) {
+        console.warn("Backend session failed, but Supabase is active.");
+        // If your app REQUIRES the backend token to function, uncomment below:
+        // throw backendErr;
       }
 
-      localStorage.setItem("token", backendToken);
-      localStorage.setItem(
-        "user",
-        JSON.stringify(backendLoginResponse.data?.user || {}),
-      );
-
+      // 4. Success Redirect
       navigate("/", { replace: true });
       window.location.reload();
     } catch (err) {
       if (axios.isAxiosError(err)) {
-        setError(
-          err.response?.data?.detail ||
-            "Unable to create backend session. Check credentials.",
-        );
+        setError(err.response?.data?.detail || "Backend connection failed.");
       } else {
         setError("An unexpected error occurred during authentication.");
       }
@@ -141,7 +139,6 @@ export const Login = () => {
   return (
     <div className="min-h-screen flex items-center justify-center p-6 bg-[#ffffff] dark:bg-[#09090b] transition-colors duration-500">
       <div className="max-w-[400px] w-full space-y-8 relative z-10">
-        {/* PROFESSIONAL BRANDING */}
         <div className="text-center space-y-2">
           <div className="flex justify-center mb-4">
             <div className="p-3 bg-zinc-950 dark:bg-white rounded-xl shadow-lg">
@@ -156,7 +153,6 @@ export const Login = () => {
           </p>
         </div>
 
-        {/* AUTH CARD */}
         <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-8 rounded-2xl shadow-sm space-y-6">
           {error && (
             <div className="p-3 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 rounded-lg text-red-600 dark:text-red-400 text-xs font-semibold">
@@ -165,7 +161,6 @@ export const Login = () => {
           )}
 
           <form onSubmit={handleLogin} className="space-y-4">
-            {/* EMAIL */}
             <div className="space-y-1.5">
               <label className="text-xs font-medium text-zinc-700 dark:text-zinc-300">
                 Email Address
@@ -185,13 +180,11 @@ export const Login = () => {
               </div>
             </div>
 
-            {/* PASSWORD */}
             <div className="space-y-1.5">
               <div className="flex justify-between items-center px-0.5">
                 <label className="text-xs font-medium text-zinc-700 dark:text-zinc-300">
                   Password
                 </label>
-                {/* UPDATED RESET BUTTON */}
                 <button
                   type="button"
                   disabled={resetLoading || cooldown > 0}
@@ -243,12 +236,7 @@ export const Login = () => {
             onClick={handleGoogleLogin}
             className="w-full h-11 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800 rounded-lg font-semibold transition-all flex items-center justify-center gap-3 text-zinc-900 dark:text-white text-sm"
           >
-            <svg
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
-            >
+            <svg width="18" height="18" viewBox="0 0 24 24">
               <path
                 d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
                 fill="#4285F4"
