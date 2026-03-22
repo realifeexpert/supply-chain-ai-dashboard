@@ -349,6 +349,8 @@ export interface AnalyticsSummary {
  * A single data point for a time-series forecast.
  */
 export interface ForecastDataPoint {
+  upper: number;
+  lower: number;
   date: string;
   value: number; // Forecasted value (e.g., units)'[]
 }

@@ -46,6 +46,7 @@ import LogisticsPage from "@/pages/LogisticsPage";
 import UsersPage from "@/pages/UsersPage";
 import ImportPage from "@/pages/ImportPage";
 import ForecastPage from "@/pages/ForecastPage";
+import PredictionPage from "./pages/PredictionPage";
 
 /* ---------------- ROUTES CONFIGURATION ---------------- */
 const router = createBrowserRouter([
@@ -69,6 +70,7 @@ const router = createBrowserRouter([
       { index: true, element: <DashboardPage /> },
       { path: "analytics", element: <AnalyticsPage /> },
       { path: "forecast", element: <ForecastPage /> },
+      { path: "prediction", element: <PredictionPage /> },
       { path: "orders", element: <OrdersPage /> },
       { path: "inventory", element: <InventoryPage /> },
       { path: "import", element: <ImportPage /> },

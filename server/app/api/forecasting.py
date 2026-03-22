@@ -1,89 +1,110 @@
 import pandas as pd
-from fastapi import APIRouter, Depends, HTTPException
+import numpy as np
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from sqlalchemy import func, cast, Date
-from sklearn.linear_model import LinearRegression  # ML model for forecasting
-import numpy as np
+from sklearn.linear_model import LinearRegression
 from datetime import datetime, timedelta
-from typing import Optional  # For the optional product_id parameter
+from typing import Optional
 
 from ..database import get_db
-from ..schemas import schemas
 from ..models import models
-from .auth import get_current_user
 
-router = APIRouter(dependencies=[Depends(get_current_user)])
+router = APIRouter()
 
-@router.get("/forecast", response_model=schemas.DemandForecast)
+@router.get("/forecast")
 def get_demand_forecast(
-    product_id: Optional[int] = None,  # Optional product ID for specific forecasts
+    product_id: Optional[int] = None, 
     db: Session = Depends(get_db)
 ):
-    """
-    Generates a 30-day demand forecast.
-    If 'product_id' is provided, forecasts for that specific product.
-    Otherwise, forecasts total demand for all products.
-    """
+    # 1. Configuration & Date Setup
+    today = datetime.utcnow().date()
+    history_limit = today - timedelta(days=120) # Get a bit more history for better patterns
     
-    # 1. Fetch historical data (last 90 days) from the database
-    ninety_days_ago = datetime.utcnow().date() - timedelta(days=90)
-    
-    # Base query for order item quantities
+    # 2. Optimized Database Query
     query = db.query(
         cast(models.Order.order_date, Date).label("date"),
         func.sum(models.OrderItem.quantity).label("total_quantity")
     ).join(models.OrderItem, models.OrderItem.order_id == models.Order.id)\
-     .filter(cast(models.Order.order_date, Date) >= ninety_days_ago)
+     .filter(models.Order.order_date >= history_limit)
 
-    # If a product_id is provided, filter the query for that specific product
     if product_id:
         query = query.filter(models.OrderItem.product_id == product_id)
     
-    # Finalize the query: group by date and order
-    order_data_query = query.group_by(cast(models.Order.order_date, Date))\
-                             .order_by(cast(models.Order.order_date, Date))\
-                             .all()
+    order_data = query.group_by("date").order_by("date").all()
 
-    if not order_data_query:
-        return {"forecast": []}
+    if not order_data:
+        return {"forecast": [], "metadata": {"status": "no_data"}}
 
-    # 2. Prepare data for the model using Pandas
-    df = pd.DataFrame(order_data_query, columns=['date', 'total_quantity'])
+    # 3. Data Engineering (Feature Extraction)
+    df = pd.DataFrame(order_data, columns=['date', 'total_quantity'])
     df['date'] = pd.to_datetime(df['date'])
     
-    # Fill in missing dates with 0 quantity to ensure a complete time series
-    date_range = pd.date_range(start=ninety_days_ago, end=datetime.utcnow().date(), freq='D')
-    df = df.set_index('date').reindex(date_range, fill_value=0).reset_index().rename(columns={'index': 'date'})
-    df['total_quantity'] = df['total_quantity'].astype(int)
+    # Fill missing dates to maintain the time-series rhythm
+    idx = pd.date_range(start=df['date'].min(), end=today, freq='D')
+    df = df.set_index('date').reindex(idx, fill_value=0).reset_index().rename(columns={'index': 'date'})
     
-    # Create a 'time_index' (days since start) as the feature for the model
-    df['time_index'] = (df['date'] - df['date'].min()).dt.days
+    # Feature 1: Time Trend
+    df['time_index'] = np.arange(len(df))
+    # Feature 2: Day of Week (0=Monday, 6=Sunday)
+    df['day_of_week'] = df['date'].dt.dayofweek
+    
+    # Convert Day of Week into "One-Hot" columns (7 columns of 0s and 1s)
+    df_encoded = pd.get_dummies(df, columns=['day_of_week'], prefix='dow')
+    
+    # Ensure all 7 days are represented even if they aren't in the data yet
+    for i in range(7):
+        col = f'dow_{i}'
+        if col not in df_encoded.columns:
+            df_encoded[col] = 0
 
-    # 3. Train a simple Linear Regression model
-    X = df[['time_index']]  # Features (input)
-    y = df['total_quantity']  # Target (output)
-    
+    # Define X (Trend + Days) and y (Quantity)
+    feature_cols = ['time_index'] + [f'dow_{i}' for i in range(7)]
+    X = df_encoded[feature_cols]
+    y = df_encoded['total_quantity']
+
+    # 4. Training the Intelligent Model
     model = LinearRegression()
     model.fit(X, y)
 
-    # 4. Predict the next 30 days
-    last_time_index = df['time_index'].max()
-    # Create an array of future time indices (next 30 days)
-    future_time_index = np.array(range(last_time_index + 1, last_time_index + 31)).reshape(-1, 1)
-    
-    predicted_quantities = model.predict(future_time_index)
-    
-    today = datetime.utcnow().date()
-    forecast_data = []
-    
-    for i in range(30):
-        future_date = today + timedelta(days=i + 1)
-        # Ensure the predicted value is not negative
-        predicted_value = max(0, int(predicted_quantities[i])) 
+    # Calculate error (Standard Deviation of Residuals)
+    preds_hist = model.predict(X)
+    std_dev = np.std(y - preds_hist)
+
+    # 5. Generating the 30-Day Future
+    forecast_results = []
+    last_time_idx = df['time_index'].max()
+
+    for i in range(1, 31):
+        future_date = today + timedelta(days=i)
         
-        forecast_data.append({
+        # Prepare feature row for this specific future date
+        dow = future_date.weekday()
+        future_row = {col: 0 for col in feature_cols}
+        future_row['time_index'] = last_time_idx + i
+        future_row[f'dow_{dow}'] = 1
+        
+        # Make prediction
+        X_future = pd.DataFrame([future_row])[feature_cols]
+        pred_val = model.predict(X_future)[0]
+        
+        # Safety: Demand can't be negative
+        val = max(0, float(pred_val))
+        
+        # "Smart" Confidence Interval: It grows slightly as we go further out (uncertainty)
+        uncertainty_multiplier = 1.96 * (1 + (i * 0.01)) 
+        
+        forecast_results.append({
             "date": future_date.strftime("%Y-%m-%d"),
-            "value": predicted_value
+            "day_name": future_date.strftime("%A"),
+            "demand_estimate": round(val, 2),
+            "confidence_upper": round(val + (uncertainty_multiplier * std_dev), 2),
+            "confidence_lower": max(0, round(val - (uncertainty_multiplier * std_dev), 2)),
+            "is_weekend": dow >= 5
         })
 
-    return {"forecast": forecast_data}
+    return {
+        "product_id": product_id,
+        "model_confidence": round(max(0, 1 - (std_dev / (y.mean() + 1))), 2), # Simplified R-squared feel
+        "forecast": forecast_results
+    }
