@@ -349,15 +349,20 @@ export interface AnalyticsSummary {
  * A single data point for a time-series forecast.
  */
 export interface ForecastDataPoint {
-  upper: number;
-  lower: number;
   date: string;
-  value: number; // Forecasted value (e.g., units)'[]
+  day_name: string;
+  demand_estimate: number; // ⬅️ Fix: Changed from 'value'
+  confidence_upper: number; // ⬅️ Fix: Added
+  confidence_lower: number; // ⬅️ Fix: Added
+  is_weekend: boolean; // ⬅️ Fix: Added
+  displayDate?: string;
 }
 
 /**
  * API response structure for the demand forecast endpoint.
  */
 export interface DemandForecast {
+  product_id: number | null;
+  model_confidence: number; // ⬅️ Fix: Added
   forecast: ForecastDataPoint[];
 }
