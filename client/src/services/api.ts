@@ -108,6 +108,12 @@ export const getDemandForecast = (productId?: number) =>
   });
 
 /**
+ * Fetches top moving products for tomorrow.
+ */
+
+export const getTopMovers = () =>
+  apiClient.get("/forecast/top-movers-tomorrow");
+/**
  * Fetches daily revenue for a specified number of past days.
  * @param days Number of past days (default: 30).
  */
