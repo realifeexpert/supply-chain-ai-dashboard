@@ -37,7 +37,6 @@ const ForecastPage = () => {
   const [historicalSummary, setHistoricalSummary] = useState<any>(null);
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
 
-  // 1. Initial Load: Products & Tomorrow's High Demand Items
   useEffect(() => {
     getProducts()
       .then((res) => setProducts(res.data))
@@ -50,7 +49,6 @@ const ForecastPage = () => {
       .catch(() => setTopMovers([]))
       .finally(() => setMoversLoading(false));
 
-    // Load today's forecasts
     setTodayLoading(true);
     fetch(`${import.meta.env.VITE_API_URL}/api/forecast/today-forecast`)
       .then((res) => res.json())
@@ -59,7 +57,6 @@ const ForecastPage = () => {
       .finally(() => setTodayLoading(false));
   }, []);
 
-  // 2. Forecast Loading Logic
   const fetchForecast = async () => {
     setLoading(true);
     try {
@@ -101,93 +98,127 @@ const ForecastPage = () => {
     .toFixed(0);
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-6 text-zinc-900 dark:text-zinc-100">
-      <ForecastHeader
-        totalProjected={totalProjected}
-        modelConfidence={modelConfidence}
-        loading={loading}
-      />
+    <div className="min-h-screen bg-slate-50 dark:bg-zinc-950 transition-colors duration-300">
+      <div className="max-w-[1600px] mx-auto p-6 space-y-8">
+        {/* SECTION 1 */}
+        <div className="bg-white dark:bg-zinc-900 rounded-3xl shadow-sm border border-zinc-200 dark:border-zinc-800 p-8">
+          <ForecastHeader
+            totalProjected={totalProjected}
+            modelConfidence={modelConfidence}
+            loading={loading}
+          />
+        </div>
 
-      <ForecastControls
-        selectedId={selectedProductId}
-        setSelectedId={setSelectedProductId}
-        products={products}
-      />
+        {/* SECTION 2 */}
+        <div className="bg-white dark:bg-zinc-900 rounded-3xl shadow-sm border border-zinc-200 dark:border-zinc-800 p-4">
+          <ForecastControls
+            selectedId={selectedProductId}
+            setSelectedId={setSelectedProductId}
+            products={products}
+          />
+        </div>
 
-      {/* Today's Product Forecast - Main Feature */}
-      <TodayForecastChart data={todayForecasts} loading={todayLoading} />
+        {/* SECTION 3 */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 bg-white dark:bg-zinc-900 rounded-3xl shadow-sm border p-6 overflow-hidden">
+            <h2 className="text-xl font-black uppercase tracking-tighter mb-6 dark:text-white">
+              Today's Inference Map
+            </h2>
+            <TodayForecastChart data={todayForecasts} loading={todayLoading} />
+          </div>
 
-      {/* Model Comparison */}
-      <ModelComparisonChart data={forecastData} loading={loading} />
+          <div className="bg-white dark:bg-zinc-900 rounded-3xl shadow-sm border p-6">
+            <ForecastMoverCard movers={topMovers} loading={moversLoading} />
+          </div>
+        </div>
 
-      {/* Seasonal Decomposition */}
-      <SeasonalDecompositionChart
-        decomposition={seasonalDecomp}
-        loading={loading}
-      />
+        {/* SECTION 4 */}
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+          <div className="bg-white dark:bg-zinc-900 rounded-3xl p-6 border">
+            <h3 className="text-sm font-black uppercase text-zinc-500 mb-4 tracking-widest">
+              Model Vector Comparison
+            </h3>
+            <ModelComparisonChart data={forecastData} loading={loading} />
+          </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2">
+          <div className="bg-white dark:bg-zinc-900 rounded-3xl p-6 border">
+            <h3 className="text-sm font-black uppercase text-zinc-500 mb-4 tracking-widest">
+              Seasonal Decomposition
+            </h3>
+            <SeasonalDecompositionChart
+              decomposition={seasonalDecomp}
+              loading={loading}
+            />
+          </div>
+        </div>
+
+        {/* SECTION 5 */}
+        <div className="bg-white dark:bg-zinc-900 rounded-[2.5rem] p-8 border">
           <ForecastChart data={forecastData} loading={loading} />
 
-          {/* UPDATED ADVISORY FOOTER */}
-          <div className="mt-6 p-6 bg-zinc-900 rounded-[2rem] border border-zinc-800 flex items-center justify-between">
-            <p className="text-[10px] font-black uppercase text-zinc-500 tracking-widest">
-              Model_Status:{" "}
-              <span
-                className={
-                  modelConfidence > 90 ? "text-emerald-500" : "text-yellow-500"
-                }
-              >
-                {modelConfidence > 90
-                  ? "OPTIMIZED_FOR_SEASONALITY"
-                  : "LEARNING_PATTERNS"}
-              </span>
-            </p>
-
-            <div className="h-1.5 w-32 bg-zinc-800 rounded-full overflow-hidden">
+          <div className="mt-8 flex items-center justify-between p-6 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl border">
+            <div className="flex items-center gap-4">
               <div
-                className={`h-full transition-all duration-1000 ${
-                  modelConfidence > 90 ? "bg-cyan-500" : "bg-yellow-500"
+                className={`w-3 h-3 rounded-full animate-pulse ${
+                  modelConfidence > 90 ? "bg-emerald-500" : "bg-amber-500"
                 }`}
+              />
+              <span className="text-xs font-black uppercase tracking-widest text-zinc-500">
+                Engine Confidence: {modelConfidence}%
+              </span>
+            </div>
+
+            <div className="w-1/3 bg-zinc-200 dark:bg-zinc-700 h-1.5 rounded-full overflow-hidden">
+              <div
+                className="bg-cyan-500 h-full transition-all duration-1000"
                 style={{ width: `${modelConfidence}%` }}
               />
             </div>
           </div>
         </div>
 
-        <div className="space-y-6">
-          {/* TOP MOVERS */}
-          <ForecastMoverCard movers={topMovers} loading={moversLoading} />
+        {/* SECTION 6 */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 bg-white dark:bg-zinc-900 rounded-3xl p-8 border min-w-0">
+            <h3 className="text-lg font-black uppercase mb-6 tracking-tighter italic">
+              Engine Advanced Metrics
+            </h3>
+            <ForecastMetrics
+              accuracy={accuracyMetrics}
+              decomposition={seasonalDecomp}
+              historical={historicalSummary}
+              confidence={modelConfidence}
+            />
+          </div>
 
-          {/* Advanced Metrics */}
-          <ForecastMetrics
-            accuracy={accuracyMetrics}
-            decomposition={seasonalDecomp}
-            historical={historicalSummary}
-            confidence={modelConfidence}
-          />
+          <div className="flex flex-col gap-6 min-w-0">
+            <div className="bg-white dark:bg-zinc-900 rounded-3xl border p-6 overflow-hidden">
+              <RealTimeForecastUpdates
+                onRefresh={fetchForecast}
+                lastUpdate={lastUpdate}
+              />
+            </div>
 
-          {/* Real-time Updates */}
-          <RealTimeForecastUpdates
-            onRefresh={fetchForecast}
-            lastUpdate={lastUpdate}
-          />
+            <div className="bg-white dark:bg-zinc-900 rounded-3xl border p-6 overflow-hidden">
+              <ForecastExport
+                forecastData={forecastData}
+                todayForecasts={todayForecasts}
+                accuracy={accuracyMetrics}
+                historical={historicalSummary}
+              />
+            </div>
 
-          {/* Export Features */}
-          <ForecastExport
-            forecastData={forecastData}
-            todayForecasts={todayForecasts}
-            accuracy={accuracyMetrics}
-            historical={historicalSummary}
-          />
+            <div className="bg-white dark:bg-zinc-900 rounded-3xl border p-6 overflow-hidden">
+              <ForecastInsights
+                confidence={modelConfidence}
+                selectedId={selectedProductId}
+              />
+            </div>
 
-          <ForecastInsights
-            confidence={modelConfidence}
-            selectedId={selectedProductId}
-          />
-
-          <ForecastLogs />
+            <div className="bg-white dark:bg-zinc-900 rounded-3xl border p-6 overflow-hidden">
+              <ForecastLogs />
+            </div>
+          </div>
         </div>
       </div>
     </div>

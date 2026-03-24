@@ -8,7 +8,7 @@ import {
   ResponsiveContainer,
   Legend,
 } from "recharts";
-import { Brain, BarChart3 } from "lucide-react";
+import { Brain, TrendingUp, Zap, Target } from "lucide-react";
 
 export const ModelComparisonChart = ({
   data,
@@ -17,7 +17,6 @@ export const ModelComparisonChart = ({
   data: any[];
   loading: boolean;
 }) => {
-  // Prepare data for model comparison
   const comparisonData = data.map((item) => ({
     date: item.displayDate,
     ensemble: item.demand_estimate,
@@ -30,18 +29,32 @@ export const ModelComparisonChart = ({
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-zinc-900 border border-zinc-700 rounded-lg p-3 shadow-lg">
-          <p className="font-bold text-white text-sm mb-2">{label}</p>
-          {payload.map((entry: any) => (
-            <p
-              key={entry.dataKey}
-              className="text-xs"
-              style={{ color: entry.color }}
-            >
-              {entry.name}:{" "}
-              <span className="font-bold">{entry.value?.toFixed(1)}</span>
-            </p>
-          ))}
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-4 shadow-2xl">
+          <p className="text-sm font-semibold mb-3 text-slate-800 dark:text-white">
+            {label}
+          </p>
+
+          <div className="space-y-2">
+            {payload.map((entry: any) => (
+              <div
+                key={entry.dataKey}
+                className="flex items-center justify-between text-xs"
+              >
+                <div className="flex items-center gap-2">
+                  <div
+                    className="w-2.5 h-2.5 rounded-full"
+                    style={{ backgroundColor: entry.color }}
+                  />
+                  <span className="text-slate-600 dark:text-slate-300">
+                    {entry.name}
+                  </span>
+                </div>
+                <span className="font-semibold" style={{ color: entry.color }}>
+                  {entry.value?.toFixed(1)}
+                </span>
+              </div>
+            ))}
+          </div>
         </div>
       );
     }
@@ -49,122 +62,164 @@ export const ModelComparisonChart = ({
   };
 
   return (
-    <div className="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-[2.5rem] p-8 shadow-2xl">
-      <div className="flex items-center justify-between mb-6">
-        <h3 className="font-bold uppercase tracking-tighter italic flex items-center gap-2 text-xl">
-          <Brain size={20} className="text-cyan-500" />
-          Model_Comparison_Analysis
-        </h3>
-        <div className="text-xs text-zinc-500 uppercase tracking-widest">
-          Ensemble vs Individual Models
+    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 md:p-8 shadow-lg overflow-hidden">
+      {/* HEADER */}
+      <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
+        <div className="flex items-center gap-4 min-w-0">
+          <div className="p-3 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl shadow-lg shrink-0">
+            <Brain className="text-white" size={22} />
+          </div>
+
+          <div className="min-w-0">
+            <h3 className="text-lg md:text-xl font-semibold text-slate-900 dark:text-white truncate">
+              Model Performance Comparison
+            </h3>
+            <p className="text-xs md:text-sm text-slate-500 truncate">
+              Ensemble vs individual forecasting models
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 text-xs md:text-sm text-slate-500 shrink-0">
+          <Target size={16} />
+          <span>Accuracy Analysis</span>
         </div>
       </div>
 
-      <div className="h-[400px] w-full mb-6">
+      {/* ----------- IMPROVED GRAPH ----------- */}
+      <div className="h-[350px] md:h-[400px] w-full mb-6 bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 rounded-xl p-4">
         {loading ? (
-          <div className="h-full flex flex-col items-center justify-center gap-4">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-500"></div>
-            <span className="text-sm font-bold uppercase tracking-widest text-cyan-500">
-              Comparing_Model_Performance...
+          <div className="h-full flex items-center justify-center">
+            <span className="text-sm text-slate-500">
+              Analyzing model performance...
             </span>
           </div>
-        ) : comparisonData.length > 0 ? (
+        ) : (
           <ResponsiveContainer width="100%" height="100%">
             <LineChart
               data={comparisonData}
-              margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
+              margin={{ top: 10, right: 20, left: 0, bottom: 0 }}
             >
-              <CartesianGrid strokeDasharray="3 3" stroke="#88888820" />
-              <XAxis
-                dataKey="date"
-                fontSize={10}
-                fontWeight="bold"
-                stroke="#71717a"
-              />
-              <YAxis fontSize={10} stroke="#71717a" />
+              {/* GRID */}
+              <CartesianGrid strokeDasharray="3 3" strokeOpacity={0.2} />
+
+              {/* AXIS */}
+              <XAxis dataKey="date" tick={{ fontSize: 11 }} stroke="#94a3b8" />
+              <YAxis tick={{ fontSize: 11 }} stroke="#94a3b8" />
+
               <Tooltip content={<CustomTooltip />} />
-              <Legend wrapperStyle={{ fontSize: "12px", fontWeight: "bold" }} />
+
+              <Legend
+                wrapperStyle={{
+                  fontSize: "12px",
+                  paddingTop: "10px",
+                }}
+              />
+
+              {/* MAIN LINE (ENSEMBLE - HIGHLIGHTED) */}
               <Line
                 type="monotone"
                 dataKey="ensemble"
-                stroke="#06b6d4"
+                stroke="#7c3aed"
                 strokeWidth={3}
-                name="Ensemble Forecast"
                 dot={false}
+                activeDot={{ r: 6 }}
+                name="Ensemble Forecast"
               />
+
+              {/* SECONDARY */}
               <Line
                 type="monotone"
                 dataKey="linear"
                 stroke="#10b981"
                 strokeWidth={2}
                 strokeDasharray="5 5"
-                name="Linear Regression"
                 dot={false}
+                name="Linear Regression"
               />
+
               <Line
                 type="monotone"
                 dataKey="arima"
                 stroke="#f59e0b"
                 strokeWidth={2}
                 strokeDasharray="10 5"
-                name="ARIMA Model"
                 dot={false}
+                name="ARIMA Model"
               />
+
+              {/* CONFIDENCE */}
               <Line
                 type="monotone"
                 dataKey="upper"
                 stroke="#ef4444"
-                strokeWidth={1}
-                strokeDasharray="2 2"
-                name="Confidence Upper"
+                strokeWidth={1.5}
+                strokeDasharray="3 3"
                 dot={false}
+                name="Confidence Upper"
               />
+
               <Line
                 type="monotone"
                 dataKey="lower"
                 stroke="#ef4444"
-                strokeWidth={1}
-                strokeDasharray="2 2"
-                name="Confidence Lower"
+                strokeWidth={1.5}
+                strokeDasharray="3 3"
                 dot={false}
+                name="Confidence Lower"
               />
             </LineChart>
           </ResponsiveContainer>
-        ) : (
-          <div className="h-full flex flex-col items-center justify-center gap-4">
-            <BarChart3 size={48} className="text-zinc-400" />
-            <span className="text-sm font-bold uppercase tracking-widest text-zinc-500">
-              No_Comparison_Data_Available
-            </span>
-          </div>
         )}
       </div>
 
-      {/* Model Performance Summary */}
-      <div className="grid grid-cols-3 gap-4 text-xs">
-        <div className="p-3 bg-cyan-500/10 border border-cyan-500/20 rounded-lg text-center">
-          <p className="font-bold text-cyan-600 dark:text-cyan-400 uppercase">
-            Ensemble
-          </p>
-          <p className="text-zinc-600 dark:text-zinc-400">
-            Best Overall Performance
-          </p>
+      {/* CARDS */}
+      {!loading && comparisonData.length > 0 && (
+        <div className="grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(240px,1fr))]">
+          <div className="p-4 rounded-xl border bg-gradient-to-br from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20">
+            <div className="flex gap-3 mb-2">
+              <Zap className="shrink-0 text-purple-600" size={16} />
+              <div>
+                <p className="font-semibold text-sm text-purple-700">
+                  Ensemble
+                </p>
+                <p className="text-xs text-purple-500">
+                  Best overall performance
+                </p>
+              </div>
+            </div>
+            <p className="text-xs text-slate-600">
+              Combines multiple models for superior accuracy and reliability
+            </p>
+          </div>
+
+          <div className="p-4 rounded-xl border bg-gradient-to-br from-emerald-50 to-green-50 dark:from-emerald-900/20 dark:to-green-900/20">
+            <div className="flex gap-3 mb-2">
+              <TrendingUp className="shrink-0 text-emerald-600" size={16} />
+              <div>
+                <p className="font-semibold text-sm text-emerald-700">Linear</p>
+                <p className="text-xs text-emerald-500">Fast & reliable</p>
+              </div>
+            </div>
+            <p className="text-xs text-slate-600">
+              Simple regression model with consistent performance
+            </p>
+          </div>
+
+          <div className="p-4 rounded-xl border bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20">
+            <div className="flex gap-3 mb-2">
+              <Target className="shrink-0 text-amber-600" size={16} />
+              <div>
+                <p className="font-semibold text-sm text-amber-700">ARIMA</p>
+                <p className="text-xs text-amber-500">Advanced time series</p>
+              </div>
+            </div>
+            <p className="text-xs text-slate-600">
+              Sophisticated seasonal and trend analysis
+            </p>
+          </div>
         </div>
-        <div className="p-3 bg-green-500/10 border border-green-500/20 rounded-lg text-center">
-          <p className="font-bold text-green-600 dark:text-green-400 uppercase">
-            Linear
-          </p>
-          <p className="text-zinc-600 dark:text-zinc-400">Fast & Reliable</p>
-        </div>
-        <div className="p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-lg text-center">
-          <p className="font-bold text-yellow-600 dark:text-yellow-400 uppercase">
-            ARIMA
-          </p>
-          <p className="text-zinc-600 dark:text-zinc-400">
-            Advanced Time Series
-          </p>
-        </div>
-      </div>
+      )}
     </div>
   );
 };

@@ -16,28 +16,36 @@ export const ForecastChart = ({
   data: any[];
   loading: boolean;
 }) => (
-  <div className="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-[2.5rem] p-8 shadow-2xl relative overflow-hidden">
-    <div className="flex items-center justify-between mb-8 relative z-10">
-      <h3 className="font-bold uppercase tracking-tighter italic flex items-center gap-2 text-xl">
-        <TrendingUp size={20} className="text-cyan-500" /> Predictive_Timeline
+  <div className="relative overflow-hidden rounded-[2.5rem] p-8 shadow-xl border border-zinc-200 dark:border-zinc-800 bg-gradient-to-br from-white via-slate-50 to-white dark:from-zinc-950 dark:via-zinc-900 dark:to-zinc-950">
+    {/* Soft Glow Background */}
+    <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 via-transparent to-purple-500/5 pointer-events-none" />
+
+    {/* Header */}
+    <div className="flex items-center justify-between mb-8 relative z-10 flex-wrap gap-4">
+      <h3 className="font-bold uppercase tracking-tight italic flex items-center gap-2 text-lg md:text-xl text-zinc-800 dark:text-zinc-100">
+        <TrendingUp size={20} className="text-cyan-500" />
+        Predictive Timeline
       </h3>
-      <div className="hidden sm:flex gap-6 text-[9px] font-black uppercase tracking-widest text-zinc-500">
-        <span>
-          <span className="inline-block w-3 h-1 bg-cyan-500 mr-2" /> Forecast
+
+      <div className="hidden sm:flex gap-6 text-[10px] font-semibold uppercase tracking-widest text-zinc-500">
+        <span className="flex items-center gap-2">
+          <span className="inline-block w-4 h-1.5 rounded bg-cyan-500" />
+          Forecast
         </span>
-        <span>
-          <span className="inline-block w-3 h-3 bg-cyan-500/10 border border-cyan-500/20 mr-2" />{" "}
-          Uncertainty
+        <span className="flex items-center gap-2">
+          <span className="inline-block w-3 h-3 rounded border border-cyan-400 bg-cyan-400/10" />
+          Uncertainty Range
         </span>
       </div>
     </div>
 
-    <div className="h-[400px] w-full relative z-10">
+    {/* Chart */}
+    <div className="h-[380px] md:h-[420px] w-full relative z-10">
       {loading ? (
         <div className="h-full flex flex-col items-center justify-center gap-4">
-          <Loader className="animate-spin text-cyan-500" size={48} />
-          <span className="text-[11px] font-black uppercase tracking-[0.5em] text-cyan-500/50">
-            Computing_Vectors...
+          <Loader className="animate-spin text-cyan-500" size={42} />
+          <span className="text-[11px] font-semibold uppercase tracking-[0.3em] text-cyan-500/60">
+            Computing Forecast...
           </span>
         </div>
       ) : (
@@ -46,39 +54,55 @@ export const ForecastChart = ({
             data={data}
             margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
           >
+            {/* Gradient */}
             <defs>
-              <linearGradient id="colorVal" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.3} />
-                <stop offset="95%" stopColor="#06b6d4" stopOpacity={0} />
+              <linearGradient id="mainGradient" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#06b6d4" stopOpacity={0.35} />
+                <stop offset="100%" stopColor="#06b6d4" stopOpacity={0} />
               </linearGradient>
             </defs>
+
+            {/* Grid */}
             <CartesianGrid
-              strokeDasharray="5 5"
+              strokeDasharray="4 4"
               vertical={false}
-              stroke="#88888810"
+              strokeOpacity={0.1}
             />
+
+            {/* Axis */}
             <XAxis
               dataKey="displayDate"
-              fontSize={10}
-              fontWeight="bold"
+              fontSize={11}
               axisLine={false}
               tickLine={false}
               tick={{ fill: "#71717a" }}
             />
             <YAxis
-              stroke="#71717a"
-              fontSize={10}
+              fontSize={11}
               axisLine={false}
               tickLine={false}
+              tick={{ fill: "#71717a" }}
             />
+
+            {/* Tooltip */}
             <Tooltip
               contentStyle={{
-                borderRadius: "20px",
-                border: "1px solid #27272a",
-                backgroundColor: "#09090b",
+                borderRadius: "16px",
+                border: "1px solid rgba(255,255,255,0.1)",
+                backgroundColor: "rgba(24,24,27,0.95)",
+                backdropFilter: "blur(8px)",
               }}
-              labelClassName="font-black text-cyan-500 border-b border-white/10 pb-1 mb-2 block"
+              labelStyle={{
+                color: "#22d3ee",
+                fontWeight: "600",
+                marginBottom: "6px",
+              }}
+              itemStyle={{
+                fontSize: "12px",
+              }}
             />
+
+            {/* Uncertainty */}
             <Area
               type="monotone"
               dataKey="confidence_upper"
@@ -93,13 +117,17 @@ export const ForecastChart = ({
               fill="#06b6d4"
               fillOpacity={0.08}
             />
+
+            {/* Main Forecast Line */}
             <Area
               type="monotone"
               dataKey="demand_estimate"
               stroke="#06b6d4"
-              strokeWidth={4}
-              fill="url(#colorVal)"
-              animationDuration={2000}
+              strokeWidth={3}
+              fill="url(#mainGradient)"
+              dot={false}
+              activeDot={{ r: 5 }}
+              animationDuration={1500}
             />
           </AreaChart>
         </ResponsiveContainer>

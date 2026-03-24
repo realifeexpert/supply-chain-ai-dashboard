@@ -1,5 +1,11 @@
 import { useState } from "react";
-import { Download, FileText, FileSpreadsheet, Mail } from "lucide-react";
+import {
+  Download,
+  FileText,
+  FileSpreadsheet,
+  Mail,
+  CheckCircle,
+} from "lucide-react";
 
 export const ForecastExport = ({
   forecastData,
@@ -13,9 +19,11 @@ export const ForecastExport = ({
   historical: any;
 }) => {
   const [isExporting, setIsExporting] = useState(false);
+  const [exportedType, setExportedType] = useState<string | null>(null);
 
   const exportToCSV = () => {
     setIsExporting(true);
+    setExportedType(null);
 
     try {
       // Prepare forecast data CSV
@@ -97,6 +105,7 @@ export const ForecastExport = ({
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
+      setExportedType("CSV");
     } catch (error) {
       console.error("Export failed:", error);
     } finally {
@@ -106,6 +115,7 @@ export const ForecastExport = ({
 
   const exportToJSON = () => {
     setIsExporting(true);
+    setExportedType(null);
 
     try {
       const exportData = {
@@ -131,6 +141,7 @@ export const ForecastExport = ({
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
+      setExportedType("JSON");
     } catch (error) {
       console.error("Export failed:", error);
     } finally {
@@ -163,60 +174,105 @@ Supply Chain AI Dashboard
   };
 
   return (
-    <div className="bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[2.5rem] p-6 shadow-sm">
-      <div className="flex items-center gap-2 mb-4">
-        <Download className="text-cyan-500" size={18} />
-        <h4 className="font-black uppercase tracking-tighter text-xs text-zinc-500">
-          Export_Forecast_Data
-        </h4>
+    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-8 shadow-lg min-w-0 overflow-hidden break-words">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-4">
+          <div className="p-3 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl shadow-lg">
+            <Download className="text-white" size={24} />
+          </div>
+          <div>
+            <h3 className="text-xl font-bold text-slate-900 dark:text-white">
+              Export Forecast Data
+            </h3>
+            <p className="text-sm text-slate-600 dark:text-slate-400">
+              Download reports and share insights
+            </p>
+          </div>
+        </div>
+        {exportedType && (
+          <div className="flex items-center gap-2 text-sm text-emerald-600 dark:text-emerald-400">
+            <CheckCircle size={16} />
+            <span className="font-medium">
+              {exportedType} exported successfully
+            </span>
+          </div>
+        )}
       </div>
 
-      <div className="space-y-3">
+      <div className="space-y-4">
         {/* CSV Export */}
         <button
           onClick={exportToCSV}
           disabled={isExporting}
-          className="w-full p-3 bg-green-500 hover:bg-green-600 disabled:bg-green-300 text-white rounded-xl border border-green-500 transition-colors duration-200 flex items-center justify-center gap-2 disabled:cursor-not-allowed"
+          className="w-full p-4 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 disabled:from-green-300 disabled:to-emerald-400 text-white rounded-xl border border-green-500 transition-all duration-200 flex items-center justify-center gap-3 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
         >
-          <FileSpreadsheet size={16} />
-          <span className="text-xs font-bold uppercase tracking-widest">
-            {isExporting ? "Exporting..." : "Export_CSV"}
-          </span>
+          <FileSpreadsheet size={20} />
+          <div className="text-left">
+            <span className="text-sm font-semibold uppercase tracking-wide">
+              {isExporting ? "Exporting..." : "Export CSV"}
+            </span>
+            <p className="text-xs opacity-90">
+              Spreadsheet format for Excel/Google Sheets
+            </p>
+          </div>
         </button>
 
         {/* JSON Export */}
         <button
           onClick={exportToJSON}
           disabled={isExporting}
-          className="w-full p-3 bg-blue-500 hover:bg-blue-600 disabled:bg-blue-300 text-white rounded-xl border border-blue-500 transition-colors duration-200 flex items-center justify-center gap-2 disabled:cursor-not-allowed"
+          className="w-full p-4 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 disabled:from-blue-300 disabled:to-indigo-400 text-white rounded-xl border border-blue-500 transition-all duration-200 flex items-center justify-center gap-3 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
         >
-          <FileText size={16} />
-          <span className="text-xs font-bold uppercase tracking-widest">
-            {isExporting ? "Exporting..." : "Export_JSON"}
-          </span>
+          <FileText size={20} />
+          <div className="text-left">
+            <span className="text-sm font-semibold uppercase tracking-wide">
+              {isExporting ? "Exporting..." : "Export JSON"}
+            </span>
+            <p className="text-xs opacity-90">
+              Structured data for developers/APIs
+            </p>
+          </div>
         </button>
 
         {/* Email Share */}
         <button
           onClick={shareViaEmail}
-          className="w-full p-3 bg-purple-500 hover:bg-purple-600 text-white rounded-xl border border-purple-500 transition-colors duration-200 flex items-center justify-center gap-2"
+          className="w-full p-4 bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white rounded-xl border border-purple-500 transition-all duration-200 flex items-center justify-center gap-3 shadow-lg hover:shadow-xl"
         >
-          <Mail size={16} />
-          <span className="text-xs font-bold uppercase tracking-widest">
-            Share_Via_Email
-          </span>
+          <Mail size={20} />
+          <div className="text-left">
+            <span className="text-sm font-semibold uppercase tracking-wide">
+              Share via Email
+            </span>
+            <p className="text-xs opacity-90">
+              Send summary report to stakeholders
+            </p>
+          </div>
         </button>
 
         {/* Export Info */}
-        <div className="p-3 bg-cyan-500/10 border border-cyan-500/20 rounded-xl">
-          <p className="text-[10px] font-bold text-cyan-600 dark:text-cyan-400 uppercase tracking-widest mb-1">
-            Export_Includes:
-          </p>
-          <div className="space-y-1 text-[9px] text-cyan-600 dark:text-cyan-400">
-            <div>• 30-day forecast data</div>
-            <div>• Today's product forecasts</div>
-            <div>• Model accuracy metrics</div>
-            <div>• Historical performance data</div>
+        <div className="p-4 bg-gradient-to-br from-slate-50 to-gray-50 dark:from-slate-800/50 dark:to-gray-800/50 border border-slate-200 dark:border-slate-700 rounded-xl">
+          <h4 className="text-sm font-semibold text-slate-900 dark:text-white mb-3 uppercase tracking-wide">
+            Report Includes:
+          </h4>
+          <div className="grid grid-cols-2 gap-3 text-xs text-slate-600 dark:text-slate-400">
+            <div className="flex items-center gap-2">
+              <CheckCircle size={12} className="text-emerald-500" />
+              <span>30-day forecast data</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <CheckCircle size={12} className="text-emerald-500" />
+              <span>Today's product forecasts</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <CheckCircle size={12} className="text-emerald-500" />
+              <span>Model accuracy metrics</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <CheckCircle size={12} className="text-emerald-500" />
+              <span>Historical performance data</span>
+            </div>
           </div>
         </div>
       </div>
