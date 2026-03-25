@@ -7,6 +7,7 @@ import type { MediaType } from "@/types";
 export interface MediaItem {
   media_url: string;
   media_type: MediaType;
+  
 }
 
 interface ImageUploaderProps {
