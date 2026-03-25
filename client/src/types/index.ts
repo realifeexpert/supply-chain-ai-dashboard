@@ -350,12 +350,79 @@ export interface AnalyticsSummary {
  */
 export interface ForecastDataPoint {
   date: string;
-  value: number; // Forecasted value (e.g., units)'[]
+  day_name: string;
+  demand_estimate: number; // ⬅️ Fix: Changed from 'value'
+  confidence_upper: number; // ⬅️ Fix: Added
+  confidence_lower: number; // ⬅️ Fix: Added
+  linear_forecast?: number; // New: Individual model forecasts
+  arima_forecast?: number; // New: Individual model forecasts
+  is_weekend: boolean; // ⬅️ Fix: Added
+  displayDate?: string;
+}
+
+/**
+ * Accuracy metrics for forecast evaluation.
+ */
+export interface ForecastAccuracy {
+  mae: number; // Mean Absolute Error
+  rmse: number; // Root Mean Square Error
+  mape: number; // Mean Absolute Percentage Error
+}
+
+/**
+ * Seasonal decomposition components.
+ */
+export interface SeasonalDecomposition {
+  trend: number[];
+  seasonal: number[];
+  residual: number[];
+}
+
+/**
+ * Historical summary statistics.
+ */
+export interface HistoricalSummary {
+  total_days: number;
+  avg_daily_demand: number;
+  max_daily_demand: number;
+  total_demand: number;
 }
 
 /**
  * API response structure for the demand forecast endpoint.
  */
 export interface DemandForecast {
+  product_id: number | null;
+  model_confidence: number;
   forecast: ForecastDataPoint[];
+  accuracy_metrics?: ForecastAccuracy;
+  seasonal_decomposition?: SeasonalDecomposition | null;
+  historical_summary?: HistoricalSummary;
+}
+
+/**
+ * Today's forecast for a specific product.
+ */
+export interface TodayProductForecast {
+  id: number;
+  name: string;
+  sku: string;
+  predicted_demand: number;
+  current_stock: number;
+  stock_status: "sufficient" | "low" | "critical";
+  trend: "increasing" | "stable" | "decreasing";
+  confidence_score: number;
+  avg_daily_demand: number;
+  days_of_stock: number;
+}
+
+/**
+ * Represents a product with high predicted demand for tomorrow.
+ */
+export interface TopMover {
+  id: number;
+  name: string;
+  sku: string;
+  predicted_qty: number;
+  current_stock: number;
 }

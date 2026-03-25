@@ -16,6 +16,12 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   const [userAccess, setUserAccess] = useState<string | null>(null);
   const location = useLocation();
 
+  // 🔓 BYPASS: Allow access to the reset password page regardless of session state
+  // This must be checked before the loading/auth logic to prevent redirects
+  if (location.pathname === "/reset-password") {
+    return <>{children}</>;
+  }
+
   useEffect(() => {
     const checkAuth = async () => {
       // 1. Get Session

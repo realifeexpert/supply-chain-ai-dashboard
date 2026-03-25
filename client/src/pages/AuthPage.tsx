@@ -17,7 +17,7 @@ const AuthPage: React.FC = () => {
 
     try {
       if (isLogin) {
-        const payload = new FormData();
+        const payload = new URLSearchParams();
         payload.append("username", email);
         payload.append("password", password);
 
@@ -58,7 +58,9 @@ const AuthPage: React.FC = () => {
           </div>
 
           <div>
-            <label className="block text-xs mb-1 text-slate-300">Password</label>
+            <label className="block text-xs mb-1 text-slate-300">
+              Password
+            </label>
             <input
               type="password"
               required
@@ -83,7 +85,9 @@ const AuthPage: React.FC = () => {
           className="mt-4 text-sm text-slate-300 underline"
           onClick={() => setIsLogin((v) => !v)}
         >
-          {isLogin ? "Need an account? Sign up" : "Already have an account? Login"}
+          {isLogin
+            ? "Need an account? Sign up"
+            : "Already have an account? Login"}
         </button>
       </div>
     </div>

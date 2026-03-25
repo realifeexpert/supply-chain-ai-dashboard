@@ -49,10 +49,10 @@ apiClient.interceptors.response.use(
       }
     }
     return Promise.reject(error);
-  }
+  },
 );
 
-export const loginUser = (formData: FormData) =>
+export const loginUser = (formData: FormData | URLSearchParams) =>
   apiClient.post("/auth/login", formData, {
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
   });
@@ -108,6 +108,12 @@ export const getDemandForecast = (productId?: number) =>
   });
 
 /**
+ * Fetches top moving products for tomorrow.
+ */
+
+export const getTopMovers = () =>
+  apiClient.get("/forecast/top-movers-tomorrow");
+/**
  * Fetches daily revenue for a specified number of past days.
  * @param days Number of past days (default: 30).
  */
@@ -125,7 +131,7 @@ export const getMonthlyRevenue = (months: number = 6) =>
     "/analytics/monthly-revenue",
     {
       params: { months }, // Pass 'months' as a query parameter
-    }
+    },
   );
 
 // -- Data Creation Functions --

@@ -92,6 +92,7 @@ const navItems = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard },
   { to: "/analytics", label: "Analytics", icon: BarChart2 },
   { to: "/forecast", label: "AI Forecast", icon: Brain },
+  { to: "/prediction", label: "AI Prediction", icon: Brain },
   { to: "/orders", label: "Orders", icon: Package },
   { to: "/inventory", label: "Inventory", icon: Package },
   { to: "/logistics", label: "Logistics", icon: Truck },

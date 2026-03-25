@@ -20,7 +20,7 @@ from .api import auth
 from .api.customer import catalog as customer_catalog
 from .api.customer import orders as customer_orders
 from .api.customer import payments as customer_payments
-from app.api.customer import address as customer_address_router
+from .api.customer import address as customer_address_router
 
 # Bulk Operation Routers
 from .bulk import bulk_inventory, bulk_orders
